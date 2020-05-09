@@ -2,17 +2,16 @@
 
 （Windows）
 
-```ps
+```powershell
 $ python -m pip install -U pip
 $ python -m venv myenv
-$ .\numpyenv\Scripts\activate
-(numpyenv)$ python -m pip install --user scikit-learn # NumPy, SciPyもインストールされる
+$ .\myenv\Scripts\activate
+(myenv)$ python -m pip install scikit-learn # NumPy, SciPyもインストールされる
 
-$ python -c "import sklearn; sklearn.show_versions()" # 動作確認
+(myenv)$ python -c "import sklearn; sklearn.show_versions()" # 動作確認
 ```
 
 ```
-
 System:
     python: 3.8.0 (tags/v3.8.0:fa919fd, Oct 14 2019, 19:37:50) [MSC v.1916 64 bit (AMD64)]
 executable: \path\to\python.exe
@@ -30,4 +29,17 @@ matplotlib: None
     joblib: 0.14.1
 
 Built with OpenMP: True
+```
+
+---
+
+（Mac）
+
+```sh
+$ python -m pip install -U pip
+$ python -m venv myenv
+$ source ./myenv/bin/activate
+(myenv)$ python -m pip install scikit-learn # NumPy, SciPyもインストールされる
+
+(myenv)$ python -c "import sklearn; sklearn.show_versions()" # 動作確認
 ```
