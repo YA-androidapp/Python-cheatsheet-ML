@@ -51,6 +51,7 @@
     - [JSON](#json)
       - [読み込み](#読み込み-2)
       - [書き出し](#書き出し-2)
+      - [フォーマット](#フォーマット)
     - [JSON 文字列の読み込み](#json-文字列の読み込み)
     - [JSON Lines](#json-lines)
     - [Excel 形式（xlsx）](#excel-形式xlsx)
@@ -60,6 +61,10 @@
     - [pickle](#pickle)
       - [読み込み](#読み込み-4)
       - [書き出し](#書き出し-4)
+    - [HTML](#html)
+      - [Web ページ内の table（表）を読み込む](#web-ページ内の-table表を読み込む)
+        - [依存パッケージをインストール](#依存パッケージをインストール-1)
+        - [読み込み](#読み込み-5)
   - [データ抽出](#データ抽出)
   - [データ加工](#データ加工-1)
   - [データ結合](#データ結合)
@@ -1307,6 +1312,78 @@ df1 = pd.read_json('data/pandas/read_json.json')
 df1.to_json('data/pandas/to_json.json')
 ```
 
+<a id="markdown-フォーマット" name="フォーマット"></a>
+
+#### フォーマット
+
+`orient` に、以下のいずれかを指定
+
+- `'split'` : dict like `{'index' -> [index], 'columns' -> [columns], 'data' -> [values]}`
+- `'records'` : list like `[{column -> value}, … , {column -> value}]`
+- `'index'` : dict like `{index -> {column -> value}}`
+- `'columns'` : dict like `{column -> {index -> value}}`
+- `'values'` : just the values array
+- `'table'` : dict like `{'schema': {schema}, 'data': {data}}`
+
+```py
+from pprint import pprint
+import json
+import pandas as pd
+
+df = pd.DataFrame(
+    [['val1', 'val2'], ['val3', 'val4']],
+    index=['row1', 'row2'],
+    columns=['col1', 'col2'])
+
+pprint(
+    json.loads(df.to_json(orient='split'))
+    )
+
+pprint(
+    json.loads(df.to_json(orient='records'))
+    )
+
+pprint(
+    json.loads(df.to_json(orient='index'))
+    )
+
+pprint(
+    json.loads(df.to_json(orient='columns'))
+    )
+
+pprint(
+    json.loads(df.to_json(orient='values'))
+    )
+
+pprint(
+    json.loads(df.to_json(orient='table'))
+    )
+```
+
+```
+{'columns': ['col1', 'col2'],
+ 'data': [['val1', 'val2'], ['val3', 'val4']],
+ 'index': ['row1', 'row2']}
+
+[{'col1': 'val1', 'col2': 'val2'}, {'col1': 'val3', 'col2': 'val4'}]
+
+{'row1': {'col1': 'val1', 'col2': 'val2'},
+ 'row2': {'col1': 'val3', 'col2': 'val4'}}
+
+{'col1': {'row1': 'val1', 'row2': 'val3'},
+ 'col2': {'row1': 'val2', 'row2': 'val4'}}
+
+[['val1', 'val2'], ['val3', 'val4']]
+
+{'data': [{'col1': 'val1', 'col2': 'val2', 'index': 'row1'},
+          {'col1': 'val3', 'col2': 'val4', 'index': 'row2'}],
+ 'schema': {'fields': [{'name': 'index', 'type': 'string'},
+                       {'name': 'col1', 'type': 'string'},
+                       {'name': 'col2', 'type': 'string'}],
+            'pandas_version': '0.20.0',
+            'primaryKey': ['index']}}
+```
+
 <a id="markdown-json-文字列の読み込み" name="json-文字列の読み込み"></a>
 
 ### JSON 文字列の読み込み
@@ -1443,6 +1520,59 @@ import pandas as pd
 
 df1 = pd.read_pickle('data/pandas/read_pickle.pkl')
 df1.to_pickle('data/pandas/to_pickle.pkl')
+```
+
+<a id="markdown-html" name="html"></a>
+
+### HTML
+
+<a id="markdown-web-ページ内の-table表を読み込む" name="web-ページ内の-table表を読み込む"></a>
+
+#### Web ページ内の table（表）を読み込む
+
+<a id="markdown-依存パッケージをインストール-1" name="依存パッケージをインストール-1"></a>
+
+##### 依存パッケージをインストール
+
+```ps
+$ pip install beautifulsoup4 html5lib lxml
+```
+
+<a id="markdown-読み込み-5" name="読み込み-5"></a>
+
+##### 読み込み
+
+```py
+from pprint import pprint
+import pandas as pd
+
+url = 'https://indexes.nikkei.co.jp/nkave/archives/data'
+dfs = pd.read_html(url)
+for df in dfs:
+    pprint(df)
+
+dfs = pd.read_html(
+    url,
+    # attrs = {'id': 'table'},
+    # encoding='cp932'
+    header=0,
+    index_col=0,
+    # skiprows=1,
+    match='.+値'
+    )
+
+for df in dfs:
+    pprint(df[['始値', '終値']].head())
+```
+
+```
+                  始値        終値
+日付
+2020.05.01  19991.97  19619.35
+2020.05.07  19468.52  19674.77
+2020.05.08  19972.09  20179.09
+2020.05.11  20333.73  20390.66
+2020.05.12  20413.23  20366.48
 ```
 
 <a id="markdown-データ抽出" name="データ抽出"></a>
