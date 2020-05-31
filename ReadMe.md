@@ -87,7 +87,16 @@
         - [query メソッド](#query-メソッド)
       - [条件に適合する列を抽出](#条件に適合する列を抽出)
         - [ブールインデックス](#ブールインデックス-1)
+      - [欠損値を除去](#欠損値を除去)
   - [データ加工](#データ加工-1)
+    - [転置](#転置)
+    - [値の置換](#値の置換)
+      - [欠損値](#欠損値)
+        - [欠損値に置き換える](#欠損値に置き換える)
+        - [欠損値を置き換える](#欠損値を置き換える)
+          - [定数で置換](#定数で置換)
+          - [統計量で置換](#統計量で置換)
+          - [前後の要素で置換](#前後の要素で置換)
   - [データ結合](#データ結合)
   - [データ要約](#データ要約)
   - [グループ化](#グループ化)
@@ -2463,9 +2472,340 @@ print(df.loc[:, df.columns.str.endswith('m') | df.columns.str.endswith('e')])
 4  2020/05/04  fuga     56
 ```
 
+<a id="markdown-欠損値を除去" name="欠損値を除去"></a>
+
+#### 欠損値を除去
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+df = df.replace([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], np.nan)
+print(df)
+
+df.dropna(how='all') # 欠損値しかない行を除去
+```
+
+```
+# df
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1       NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN
+r2       NaN  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+
+# df.dropna(how='all')
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r2       NaN  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+```
+
 <a id="markdown-データ加工-1" name="データ加工-1"></a>
 
 ## データ加工
+
+<a id="markdown-転置" name="転置"></a>
+
+### 転置
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+print(df.shape) # タプル (行数, 列数)
+print(df)
+
+df = df.T
+
+print(df.shape) # タプル (行数, 列数)
+print(df)
+```
+
+```
+(5, 10)
+
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+# 転置
+(10, 5)
+
+index   r1  r2  r3  r4  r5
+column
+c1       0  10  20  30  40
+c2       1  11  21  31  41
+c3       2  12  22  32  42
+c4       3  13  23  33  43
+c5       4  14  24  34  44
+c6       5  15  25  35  45
+c7       6  16  26  36  46
+c8       7  17  27  37  47
+c9       8  18  28  38  48
+c10      9  19  29  39  49
+```
+
+<a id="markdown-値の置換" name="値の置換"></a>
+
+### 値の置換
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+print(df)
+
+# 1要素だけ置換
+df = df.replace(0, 999)
+# print(df)
+
+# 複数要素を置換
+df = df.replace({10: 1000, 20: 2000})
+# print(df)
+df = df.replace([30, 40], [3000, 4000])
+# print(df)
+df = df.replace([1, 2, 3, 4], 0)
+print(df)
+```
+
+```
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+column    c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       999   0   0   0   0   5   6   7   8    9
+r2      1000  11  12  13  14  15  16  17  18   19
+r3      2000  21  22  23  24  25  26  27  28   29
+r4      3000  31  32  33  34  35  36  37  38   39
+r5      4000  41  42  43  44  45  46  47  48   49
+```
+
+<a id="markdown-欠損値" name="欠損値"></a>
+
+#### 欠損値
+
+<a id="markdown-欠損値に置き換える" name="欠損値に置き換える"></a>
+
+##### 欠損値に置き換える
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+print(df)
+
+
+df = df.replace([0, 1, 10], np.nan) # NaNを含む列はfloat型になる
+print(df)
+```
+
+```
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+column    c1    c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       NaN   NaN   2   3   4   5   6   7   8    9
+r2       NaN  11.0  12  13  14  15  16  17  18   19
+r3      20.0  21.0  22  23  24  25  26  27  28   29
+r4      30.0  31.0  32  33  34  35  36  37  38   39
+r5      40.0  41.0  42  43  44  45  46  47  48   49
+```
+
+<a id="markdown-欠損値を置き換える" name="欠損値を置き換える"></a>
+
+##### 欠損値を置き換える
+
+<a id="markdown-定数で置換" name="定数で置換"></a>
+
+###### 定数で置換
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+df = df.replace([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], np.nan)
+print(df)
+
+df.fillna(-1)
+
+df.fillna({'c1': -1, 'c2': -2, 'c3': -3})
+```
+
+```
+# df
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1       NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN
+r2       NaN  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+
+# df.fillna(-1)
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1      -1.0  -1.0  -1.0  -1.0  -1.0  -1.0  -1.0  -1.0  -1.0  -1.0
+r2      -1.0  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+
+# df.fillna({'c1': -1, 'c2': -2, 'c3': -3})
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1      -1.0  -2.0  -3.0   NaN   NaN   NaN   NaN   NaN   NaN   NaN
+r2      -1.0  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+```
+
+<a id="markdown-統計量で置換" name="統計量で置換"></a>
+
+###### 統計量で置換
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+df = df.replace([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], np.nan)
+print(df)
+
+df.fillna(df.mean(numeric_only=True)) # 列ごとの平均値で置換
+df.fillna(df.median(numeric_only=True)) # 列ごとの中央値（要素数が偶数の場合は中央2要素の平均値）で置換
+df.fillna(df.mode(numeric_only=True).iloc[0]) # 列ごとの最頻値で置換
+```
+
+```
+# df
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1       NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN   NaN
+r2       NaN  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+
+# 列ごとの平均値で置換
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1      30.0  26.0  27.0  28.0  29.0  30.0  31.0  32.0  33.0  34.0
+r2      30.0  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+
+# 列ごとの中央値で置換
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1      30.0  26.0  27.0  28.0  29.0  30.0  31.0  32.0  33.0  34.0
+r2      30.0  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+
+# 列ごとの最頻値で置換
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1      20.0  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r2      20.0  11.0  12.0  13.0  14.0  15.0  16.0  17.0  18.0  19.0
+r3      20.0  21.0  22.0  23.0  24.0  25.0  26.0  27.0  28.0  29.0
+r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
+r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
+```
+
+<a id="markdown-前後の要素で置換" name="前後の要素で置換"></a>
+
+###### 前後の要素で置換
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+df = df.replace([0, 11, 22, 33, 44, 15, 17, 18, 19, 25, 26, 27, 28, 29, 36, 37, 38, 39], np.nan)
+print(df)
+
+df.fillna(method='ffill')
+df.fillna(method='ffill', limit=2)
+
+df.fillna(method='bfill')
+df.fillna(method='bfill', limit=2)
+```
+
+```
+# df
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1       NaN   1.0   2.0   3.0   4.0   5.0   6.0   7.0   8.0   9.0
+r2      10.0   NaN  12.0  13.0  14.0   NaN  16.0   NaN   NaN   NaN
+r3      20.0  21.0   NaN  23.0  24.0   NaN   NaN   NaN   NaN   NaN
+r4      30.0  31.0  32.0   NaN  34.0  35.0   NaN   NaN   NaN   NaN
+r5      40.0  41.0  42.0  43.0   NaN  45.0  46.0  47.0  48.0  49.0
+
+# df.fillna(method='ffill')
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1       NaN   1.0   2.0   3.0   4.0   5.0   6.0   7.0   8.0   9.0
+r2      10.0   1.0  12.0  13.0  14.0   5.0  16.0   7.0   8.0   9.0
+r3      20.0  21.0  12.0  23.0  24.0   5.0  16.0   7.0   8.0   9.0
+r4      30.0  31.0  32.0  23.0  34.0  35.0  16.0   7.0   8.0   9.0
+r5      40.0  41.0  42.0  43.0  34.0  45.0  46.0  47.0  48.0  49.0
+
+# df.fillna(method='ffill', limit=2)
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1       NaN   1.0   2.0   3.0   4.0   5.0   6.0   7.0   8.0   9.0
+r2      10.0   1.0  12.0  13.0  14.0   5.0  16.0   7.0   8.0   9.0
+r3      20.0  21.0  12.0  23.0  24.0   5.0  16.0   7.0   8.0   9.0
+r4      30.0  31.0  32.0  23.0  34.0  35.0  16.0   NaN   NaN   NaN
+r5      40.0  41.0  42.0  43.0  34.0  45.0  46.0  47.0  48.0  49.0
+
+# df.fillna(method='bfill')
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1      10.0   1.0   2.0   3.0   4.0   5.0   6.0   7.0   8.0   9.0
+r2      10.0  21.0  12.0  13.0  14.0  35.0  16.0  47.0  48.0  49.0
+r3      20.0  21.0  32.0  23.0  24.0  35.0  46.0  47.0  48.0  49.0
+r4      30.0  31.0  32.0  43.0  34.0  35.0  46.0  47.0  48.0  49.0
+r5      40.0  41.0  42.0  43.0   NaN  45.0  46.0  47.0  48.0  49.0
+
+# df.fillna(method='bfill', limit=2)
+column    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10
+index
+r1      10.0   1.0   2.0   3.0   4.0   5.0   6.0   7.0   8.0   9.0
+r2      10.0  21.0  12.0  13.0  14.0  35.0  16.0   NaN   NaN   NaN
+r3      20.0  21.0  32.0  23.0  24.0  35.0  46.0  47.0  48.0  49.0
+r4      30.0  31.0  32.0  43.0  34.0  35.0  46.0  47.0  48.0  49.0
+r5      40.0  41.0  42.0  43.0   NaN  45.0  46.0  47.0  48.0  49.0
+```
 
 <a id="markdown-データ結合" name="データ結合"></a>
 
