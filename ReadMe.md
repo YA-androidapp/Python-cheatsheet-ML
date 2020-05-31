@@ -66,6 +66,27 @@
         - [依存パッケージをインストール](#依存パッケージをインストール-1)
         - [読み込み](#読み込み-5)
   - [データ抽出](#データ抽出)
+    - [Dataframe の概要を確認](#dataframe-の概要を確認)
+      - [情報表示](#情報表示)
+      - [行名・列名、行数・列数・要素数](#行名・列名行数・列数・要素数)
+        - [行名を変更](#行名を変更)
+          - [列をインデックスとして使用](#列をインデックスとして使用)
+          - [連番にリセットする](#連番にリセットする)
+      - [行名・列名、行数・列数・要素数](#行名・列名行数・列数・要素数-1)
+      - [行名・列名、行数・列数・要素数](#行名・列名行数・列数・要素数-2)
+      - [行を絞る](#行を絞る)
+        - [先頭](#先頭)
+        - [末尾](#末尾)
+      - [インデックスから行と列を絞る（DataFrame）](#インデックスから行と列を絞るdataframe)
+        - [行または列](#行または列)
+        - [行と列](#行と列)
+          - [添え字で辿っていく方法](#添え字で辿っていく方法)
+      - [インデックスから行を絞る（Series）](#インデックスから行を絞るseries)
+      - [条件に適合する行を抽出](#条件に適合する行を抽出)
+        - [ブールインデックス](#ブールインデックス)
+        - [query メソッド](#query-メソッド)
+      - [条件に適合する列を抽出](#条件に適合する列を抽出)
+        - [ブールインデックス](#ブールインデックス-1)
   - [データ加工](#データ加工-1)
   - [データ結合](#データ結合)
   - [データ要約](#データ要約)
@@ -514,6 +535,22 @@ print(pd.get_option('display.max_rows')) # 10
 
 ## データ型
 
+- オブジェクト
+  - 1 次元: シリーズ `pandas.Series`
+  - 2 次元: データフレーム `panas.DataFrame`
+
+DataFrame の列や Series は、以下のデータ型の値を取る
+
+| dtype         | 対応する Python のデータ型 |
+| ------------- | -------------------------- |
+| object        | str                        |
+| int64         | int                        |
+| float64       | float                      |
+| bool          | bool                       |
+| datetime64    |                            |
+| timedelta[ns] |                            |
+| category      |                            |
+
 <a id="markdown-python-リストから生成" name="python-リストから生成"></a>
 
 ### Python リストから生成
@@ -525,6 +562,11 @@ lst = range(3) # Pythonのリスト
 
 pd.Series(lst) # 1次元: シリーズ
 pd.DataFrame(lst) # 2次元: データフレーム
+
+df = pd.DataFrame(lst)
+df.dtypes # データ型の確認
+df = df.astype('float32') # データ型の変換
+df.dtypes # 変換後のデータ型の確認
 ```
 
 ```
@@ -539,6 +581,14 @@ dtype: int64
 0  1
 1  2
 2  3
+
+# データ型の確認
+0    int64
+dtype: object
+
+# 変換後のデータ型の確認
+0    float32
+dtype: object
 ```
 
 <a id="markdown-numpy-配列から生成" name="numpy-配列から生成"></a>
@@ -1578,6 +1628,840 @@ for df in dfs:
 <a id="markdown-データ抽出" name="データ抽出"></a>
 
 ## データ抽出
+
+<a id="markdown-dataframe-の概要を確認" name="dataframe-の概要を確認"></a>
+
+### Dataframe の概要を確認
+
+<a id="markdown-情報表示" name="情報表示"></a>
+
+#### 情報表示
+
+```py
+import numpy as np
+import pandas as pd
+
+arr = np.arange(50).reshape(5, 10)
+idx = pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index')
+col = pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column')
+df = pd.DataFrame(arr, index=idx, columns=col) # 2次元: データフレーム
+
+df.info()
+
+# 統計量
+df.describe()
+# df.describe(include='all') # 数値型以外も対象とする
+```
+
+```
+<class 'pandas.core.frame.DataFrame'>
+Index: 5 entries, r1 to r5
+Data columns (total 10 columns):
+ #   Column  Non-Null Count  Dtype
+---  ------  --------------  -----
+ 0   c1      5 non-null      int32
+ 1   c2      5 non-null      int32
+ 2   c3      5 non-null      int32
+ 3   c4      5 non-null      int32
+ 4   c5      5 non-null      int32
+ 5   c6      5 non-null      int32
+ 6   c7      5 non-null      int32
+ 7   c8      5 non-null      int32
+ 8   c9      5 non-null      int32
+ 9   c10     5 non-null      int32
+dtypes: int32(10)
+memory usage: 240.0+ bytes
+
+column         c1         c2         c3         c4         c5         c6         c7         c8         c9        c10
+count    5.000000   5.000000   5.000000   5.000000   5.000000   5.000000   5.000000   5.000000   5.000000   5.000000
+mean    20.000000  21.000000  22.000000  23.000000  24.000000  25.000000  26.000000  27.000000  28.000000  29.000000
+std     15.811388  15.811388  15.811388  15.811388  15.811388  15.811388  15.811388  15.811388  15.811388  15.811388
+min      0.000000   1.000000   2.000000   3.000000   4.000000   5.000000   6.000000   7.000000   8.000000   9.000000
+25%     10.000000  11.000000  12.000000  13.000000  14.000000  15.000000  16.000000  17.000000  18.000000  19.000000
+50%     20.000000  21.000000  22.000000  23.000000  24.000000  25.000000  26.000000  27.000000  28.000000  29.000000
+75%     30.000000  31.000000  32.000000  33.000000  34.000000  35.000000  36.000000  37.000000  38.000000  39.000000
+max     40.000000  41.000000  42.000000  43.000000  44.000000  45.000000  46.000000  47.000000  48.000000  49.000000
+```
+
+<a id="markdown-行名・列名行数・列数・要素数" name="行名・列名行数・列数・要素数"></a>
+
+#### 行名・列名、行数・列数・要素数
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+df.index # 行名
+df.columns # 列名
+df.values # 値
+```
+
+```
+# 行名
+Index(['r1', 'r2', 'r3', 'r4', 'r5'], dtype='object', name='index')
+
+# 列名
+Index(['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9', 'c10'], dtype='object', name='column')
+
+# 値
+array([[ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9],
+       [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+       [20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+       [30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
+       [40, 41, 42, 43, 44, 45, 46, 47, 48, 49]])
+```
+
+<a id="markdown-行名を変更" name="行名を変更"></a>
+
+##### 行名を変更
+
+<a id="markdown-列をインデックスとして使用" name="列をインデックスとして使用"></a>
+
+###### 列をインデックスとして使用
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+df.index = df.pop('c2')
+
+print(df)
+print(df.index) # 行名
+```
+
+```
+column  c1  c3  c4  c5  c6  c7  c8  c9  c10
+c2
+1        0   2   3   4   5   6   7   8    9
+11      10  12  13  14  15  16  17  18   19
+21      20  22  23  24  25  26  27  28   29
+31      30  32  33  34  35  36  37  38   39
+41      40  42  43  44  45  46  47  48   49
+
+Int64Index([1, 11, 21, 31, 41], dtype='int64', name='c2')
+```
+
+<a id="markdown-連番にリセットする" name="連番にリセットする"></a>
+
+###### 連番にリセットする
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+# 変更前
+print(df)
+print(df.index) # 行名
+
+# 変更後
+df = df.reset_index(drop=True)
+print(df)
+print(df.index) # 行名
+```
+
+```
+# 変更前
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+Index(['r1', 'r2', 'r3', 'r4', 'r5'], dtype='object', name='index')
+
+# 変更後
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+0        0   1   2   3   4   5   6   7   8    9
+1       10  11  12  13  14  15  16  17  18   19
+2       20  21  22  23  24  25  26  27  28   29
+3       30  31  32  33  34  35  36  37  38   39
+4       40  41  42  43  44  45  46  47  48   49
+
+RangeIndex(start=0, stop=5, step=1)
+```
+
+<a id="markdown-行名・列名行数・列数・要素数-1" name="行名・列名行数・列数・要素数-1"></a>
+
+#### 行名・列名、行数・列数・要素数
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+print(len(df)) # 行数
+print(len(df.columns)) # 列数
+print(df.shape) # タプル (行数, 列数)
+r, c = df.shape
+print(r, c)
+
+print(df.size) # 要素数
+```
+
+```
+# 行数
+5
+
+# 列数
+10
+
+# タプル (行数, 列数)
+(5, 10)
+5 10
+
+# 要素数
+50
+```
+
+<a id="markdown-行名・列名行数・列数・要素数-2" name="行名・列名行数・列数・要素数-2"></a>
+
+#### 行名・列名、行数・列数・要素数
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+print(df.isnull().sum()) # 各列ごとのNaNの数
+print(df.isnull().sum(axis=1)) # 各行ごとのNaNの数
+
+print(df.count()) # 各列ごとのNaNでない要素の数
+print(df.count(axis=1)) # 各行ごとのNaNでない要素の数
+```
+
+```
+# 各列ごとのNaNの数
+column
+c1     0
+c2     0
+c3     0
+c4     0
+c5     0
+c6     0
+c7     0
+c8     0
+c9     0
+c10    0
+dtype: int64
+
+# 各行ごとのNaNの数
+index
+r1    0
+r2    0
+r3    0
+r4    0
+r5    0
+dtype: int64
+
+# 各列ごとのNaNでない要素の数
+column
+c1     5
+c2     5
+c3     5
+c4     5
+c5     5
+c6     5
+c7     5
+c8     5
+c9     5
+c10    5
+dtype: int64
+
+# 各行ごとのNaNでない要素の数
+index
+r1    10
+r2    10
+r3    10
+r4    10
+r5    10
+dtype: int64
+```
+
+<a id="markdown-行を絞る" name="行を絞る"></a>
+
+#### 行を絞る
+
+<a id="markdown-先頭" name="先頭"></a>
+
+##### 先頭
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(100).reshape(10, 10), index=pd.Index(['r{}'.format(x+1) for x in range(10)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+df.head() # 先頭5行
+df.head(2) # 先頭2行
+```
+
+```
+# 先頭5行
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+# 先頭2行
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+```
+
+<a id="markdown-末尾" name="末尾"></a>
+
+##### 末尾
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(100).reshape(10, 10), index=pd.Index(['r{}'.format(x+1) for x in range(10)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+df.head() # 先頭5行
+df.head(2) # 先頭2行
+```
+
+```
+# 末尾5行
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r6      50  51  52  53  54  55  56  57  58   59
+r7      60  61  62  63  64  65  66  67  68   69
+r8      70  71  72  73  74  75  76  77  78   79
+r9      80  81  82  83  84  85  86  87  88   89
+r10     90  91  92  93  94  95  96  97  98   99
+
+# 末尾2行
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r9      80  81  82  83  84  85  86  87  88   89
+r10     90  91  92  93  94  95  96  97  98   99
+```
+
+<a id="markdown-インデックスから行と列を絞るdataframe" name="インデックスから行と列を絞るdataframe"></a>
+
+#### インデックスから行と列を絞る（DataFrame）
+
+<a id="markdown-行または列" name="行または列"></a>
+
+##### 行または列
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(200).reshape(20, 10), index=pd.Index(['r{}'.format(x+1) for x in range(20)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+df['c1'] # df[列名]
+df.c1 # df.列名
+
+df[['c1']]       # df[列名リスト]
+df[['c1', 'c9']] #
+
+# df[行番号スライス]
+df[:1]  # r1
+df[2:3] # r3
+df[4:6] # r5, r6
+df[7:]  # r8からr20
+```
+
+```
+# df['c1'] # df[列名]
+index
+r1       0
+r2      10
+r3      20
+r4      30
+r5      40
+r6      50
+r7      60
+r8      70
+r9      80
+r10     90
+r11    100
+r12    110
+r13    120
+r14    130
+r15    140
+r16    150
+r17    160
+r18    170
+r19    180
+r20    190
+Name: c1, dtype: int32
+
+# df['c1'] # df[列名]
+index
+r1       0
+r2      10
+r3      20
+r4      30
+r5      40
+r6      50
+r7      60
+r8      70
+r9      80
+r10     90
+r11    100
+r12    110
+r13    120
+r14    130
+r15    140
+r16    150
+r17    160
+r18    170
+r19    180
+r20    190
+Name: c1, dtype: int32
+
+# df[['c1', 'c9']]
+column   c1   c9
+index
+r1        0    8
+r2       10   18
+r3       20   28
+r4       30   38
+r5       40   48
+r6       50   58
+r7       60   68
+r8       70   78
+r9       80   88
+r10      90   98
+r11     100  108
+r12     110  118
+r13     120  128
+r14     130  138
+r15     140  148
+r16     150  158
+r17     160  168
+r18     170  178
+r19     180  188
+r20     190  198
+
+# df[行番号スライス]
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+
+# df[2:3]
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r3      20  21  22  23  24  25  26  27  28   29
+
+# df[4:6]
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r5      40  41  42  43  44  45  46  47  48   49
+r6      50  51  52  53  54  55  56  57  58   59
+
+# df[7:]
+column   c1   c2   c3   c4   c5   c6   c7   c8   c9  c10
+index
+r8       70   71   72   73   74   75   76   77   78   79
+r9       80   81   82   83   84   85   86   87   88   89
+r10      90   91   92   93   94   95   96   97   98   99
+r11     100  101  102  103  104  105  106  107  108  109
+r12     110  111  112  113  114  115  116  117  118  119
+r13     120  121  122  123  124  125  126  127  128  129
+r14     130  131  132  133  134  135  136  137  138  139
+r15     140  141  142  143  144  145  146  147  148  149
+r16     150  151  152  153  154  155  156  157  158  159
+r17     160  161  162  163  164  165  166  167  168  169
+r18     170  171  172  173  174  175  176  177  178  179
+r19     180  181  182  183  184  185  186  187  188  189
+r20     190  191  192  193  194  195  196  197  198  199
+```
+
+<a id="markdown-行と列" name="行と列"></a>
+
+##### 行と列
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(200).reshape(20, 10), index=pd.Index(['r{}'.format(x+1) for x in range(20)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+
+# 特定の要素にアクセス
+
+# 行名と列名の組み合わせで指定
+print(df.at['r16', 'c5']) # 値を取得 154
+df.at['r16', 'c5'] = 2 * df.at['r16', 'c5'] # 上書き
+
+# 行番号と列番号の組み合わせで指定
+print(df.iat[15, 4]) # 値を取得 308
+df.iat[15, 4] = 3 * df.iat[15, 4] # 上書き 924
+
+# 複数の要素にアクセス
+
+# 行全体・列全体
+print(df.loc['r16']) # 引数1つだけ指定すると行指定
+print(df.loc[:, 'c5']) # 列だけ指定
+
+# 行名と列名の組み合わせで指定
+print(df.loc['r16', 'c5'])
+print(df.loc['r15':'r17', 'c4':'c6'])
+print(df.loc[['r15', 'r17'], ['c4', 'c6']])
+
+# 行番号と列番号の組み合わせで指定
+print(df.iloc[15, 4])
+print(df.iloc[14:16, 3:5])
+print(df.loc[['r15', 'r17'], ['c4', 'c6']])
+
+print(df.iloc[::2, 1::2]) # 偶奇
+
+# 名前と番号の組み合わせで指定
+print(df.at[df.index[15], 'c5'])
+print(df.loc[['r15', 'r17'], df.columns[4]])
+```
+
+```
+# 行名と列名の組み合わせで指定
+# 行名と列名の組み合わせで指定
+924
+
+column   c4   c5   c6
+index
+r15     143  144  145
+r16     153  924  155
+r17     163  164  165
+
+column   c4   c6
+index
+r15     143  145
+r17     163  165
+
+# 行番号と列番号の組み合わせで指定
+924
+
+column   c4   c5
+index
+r15     143  144
+r16     153  924
+
+column   c4   c6
+index
+r15     143  145
+r17     163  165
+
+column   c2   c4   c6   c8  c10
+index
+r1        1    3    5    7    9
+r3       21   23   25   27   29
+r5       41   43   45   47   49
+r7       61   63   65   67   69
+r9       81   83   85   87   89
+r11     101  103  105  107  109
+r13     121  123  125  127  129
+r15     141  143  145  147  149
+r17     161  163  165  167  169
+r19     181  183  185  187  189
+
+# 名前と番号の組み合わせで指定
+924
+
+index
+r15    144
+r17    164
+Name: c5, dtype: int32
+```
+
+<a id="markdown-添え字で辿っていく方法" name="添え字で辿っていく方法"></a>
+
+###### 添え字で辿っていく方法
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(200).reshape(20, 10), index=pd.Index(['r{}'.format(x+1) for x in range(20)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+
+print(df['c3']['r9'])
+
+print(df[['c2','c4']]['r8':'r10'])
+# print(df[['c2','c4']][['r8','r10']]) # KeyError
+
+print(df[1:3])
+```
+
+```
+# print(df['c3']['r9'])
+82
+
+# print(df[['c2','c4']]['r8':'r10'])
+column  c2  c4
+index
+r8      71  73
+r9      81  83
+r10     91  93
+```
+
+<a id="markdown-インデックスから行を絞るseries" name="インデックスから行を絞るseries"></a>
+
+#### インデックスから行を絞る（Series）
+
+```py
+import numpy as np
+import pandas as pd
+
+sr = pd.Series(np.arange(10), index=pd.Index(['r{}'.format(x+1) for x in range(10)], name = 'index'))
+
+sr['r2']         # sr[行名]       → 1 <class 'numpy.int32'>
+sr[['r5', 'r6']] # sr[行名リスト]
+sr['r2':'r4']    # sr[行名スライス] → r2, r3, r4
+
+sr[9]            # sr[行番号]         → (r10) 9 <class 'numpy.int32'>
+sr[[1, 2, 3]]    # sr[行番号リスト]   → r2, r3, r4
+sr[1:3]          # sr[行番号スライス] → r2, r3
+```
+
+```
+# sr['r2']
+1
+
+# sr[['r5', 'r6']]
+index
+r5    4
+r6    5
+dtype: int32
+
+# sr['r2':'r4']
+index
+r2    1
+r3    2
+r4    3
+dtype: int32
+
+# sr[9]
+9
+
+# sr[[1, 2, 3]]
+index
+r2    1
+r3    2
+r4    3
+dtype: int32
+
+# sr[1:3]
+index
+r2    1
+r3    2
+dtype: int32
+```
+
+<a id="markdown-条件に適合する行を抽出" name="条件に適合する行を抽出"></a>
+
+#### 条件に適合する行を抽出
+
+<a id="markdown-ブールインデックス" name="ブールインデックス"></a>
+
+##### ブールインデックス
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 23456, 3456, 456, 56]
+    })
+
+df[[True, True, True, False, True]]
+
+df[df['price'] < 456]
+df[(df['price'] <= 456) | (df['item'] == 'bar')] # OR
+df[~(df['item'] == 'piyo') & (df['item'] == 'piyo')] # NOT, AND
+```
+
+```
+         date  item  price
+0  2020/05/01   foo  12345
+1  2020/05/01   bar  23456
+2  2020/05/02  hoge   3456
+4  2020/05/04  fuga     56
+
+         date  item  price
+4  2020/05/04  fuga     56
+
+         date  item  price
+1  2020/05/01   bar  23456
+3  2020/05/03  piyo    456
+4  2020/05/04  fuga     56
+
+Empty DataFrame
+Columns: [date, item, price]
+Index: []
+```
+
+<a id="markdown-query-メソッド" name="query-メソッド"></a>
+
+##### query メソッド
+
+- 事前準備（必須ではない）
+
+```ps
+$ pip install numexpr
+```
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 23456, 3456, 456, 56]
+    })
+
+max_index = 3
+df.query('index < @max_index') # 変数を参照して、インデックス番号と比較
+
+df.query('price < 456')
+
+df.query('price <= 456 or item == "bar"') # OR
+df.query('price <= 456 | item == "bar"')
+
+df.query('not item == "2020/05/01" and item == "2020/05/01"') # NOT, AND
+
+df.query('12345 <= price < 20000') # ANDを使用しない範囲指定
+```
+
+```
+   item  price  cost
+0   foo  12345  4321
+1   bar  23456  5432
+2  hoge   3456   654
+
+         date  item  price
+4  2020/05/04  fuga     56
+
+         date  item  price
+1  2020/05/01   bar  23456
+3  2020/05/03  piyo    456
+4  2020/05/04  fuga     56
+
+         date  item  price
+1  2020/05/01   bar  23456
+3  2020/05/03  piyo    456
+4  2020/05/04  fuga     56
+
+Empty DataFrame
+Columns: [date, item, price]
+Index: []
+
+         date item  price
+0  2020/05/01  foo  12345
+```
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 23456, 3456, 456, 56],
+    'cost': [4321, 5432, 654, 76, 87]
+    })
+
+df.query('price < 3 * cost') # 他の列を参照
+
+df.query('item in ["foo", "hoge"]') # in演算子
+df.query('item == ["foo", "hoge"]')
+
+print(df.query('item.str.startswith("f")')) # 前方一致
+print(df.query('item.str.endswith("o")'))   # 後方一致
+print(df.query('item.str.contains("oo")'))  # 部分一致
+print(df.query('item.str.match("[a-c]")'))  # 正規表現
+
+df.query('price.astype("str").str.endswith("6")') # 文字型以外の列
+```
+
+```
+# 他の列を参照
+   item  price  cost
+0   foo  12345  4321
+4  fuga     56    87
+
+# in演算子
+   item  price  cost
+0   foo  12345  4321
+2  hoge   3456   654
+
+# 前方一致
+   item  price  cost
+0   foo  12345  4321
+4  fuga     56    87
+
+# 後方一致
+   item  price  cost
+0   foo  12345  4321
+3  piyo    456    76
+
+# 部分一致
+  item  price  cost
+0  foo  12345  4321
+
+# 正規表現
+  item  price  cost
+1  bar  23456  5432
+
+# 文字型以外の列
+   item  price  cost
+1   bar  23456  5432
+2  hoge   3456   654
+3  piyo    456    76
+4  fuga     56    87
+```
+
+<a id="markdown-条件に適合する列を抽出" name="条件に適合する列を抽出"></a>
+
+#### 条件に適合する列を抽出
+
+<a id="markdown-ブールインデックス-1" name="ブールインデックス-1"></a>
+
+##### ブールインデックス
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 23456, 3456, 456, 56]
+    })
+
+print(df.loc[:, df.columns.str.endswith('e')])
+print(df.loc[:, df.columns.str.endswith('m') | df.columns.str.endswith('e')])
+```
+
+```
+         date  price
+0  2020/05/01  12345
+1  2020/05/01  23456
+2  2020/05/02   3456
+3  2020/05/03    456
+4  2020/05/04     56
+
+         date  item  price
+0  2020/05/01   foo  12345
+1  2020/05/01   bar  23456
+2  2020/05/02  hoge   3456
+3  2020/05/03  piyo    456
+4  2020/05/04  fuga     56
+```
 
 <a id="markdown-データ加工-1" name="データ加工-1"></a>
 
