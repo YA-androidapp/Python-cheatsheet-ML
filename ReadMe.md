@@ -94,6 +94,10 @@
         - [append](#append)
         - [concat](#concat)
       - [列の追加](#列の追加)
+        - [列名](#列名)
+        - [assign](#assign)
+        - [insert（位置を指定して追加）](#insert位置を指定して追加)
+        - [concat（DataFrame に Series を列として追加）](#concatdataframe-に-series-を列として追加)
     - [転置](#転置)
     - [値の置換](#値の置換)
       - [欠損値](#欠損値)
@@ -103,6 +107,11 @@
           - [統計量で置換](#統計量で置換)
           - [前後の要素で置換](#前後の要素で置換)
   - [データ結合](#データ結合)
+    - [inner join](#inner-join)
+      - [複数キー](#複数キー)
+    - [left join](#left-join)
+    - [right join](#right-join)
+    - [outer join](#outer-join)
   - [データ要約](#データ要約)
   - [グループ化](#グループ化)
   - [データ可視化](#データ可視化)
@@ -2865,7 +2874,11 @@ print('df2', df2)
 df3 = pd.concat([df1, df2])
 print('df3', df3)
 
-df4 = pd.concat([df1, df2], join='inner', ignore_index=True)
+df4 = pd.concat(
+    [df1, df2],
+    join='inner', # 共通する列のみ残す
+    ignore_index=True # インデックスを振り直す
+)
 print('df4', df4)
 ```
 
@@ -2912,6 +2925,198 @@ df4          date  item
 <a id="markdown-列の追加" name="列の追加"></a>
 
 #### 列の追加
+
+<a id="markdown-列名" name="列名"></a>
+
+##### 列名
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 23456, 3456, 456, 56]
+    })
+df
+
+# 定数
+df['amount'] = 0
+df
+
+# リスト（DataFrameの各行に要素を代入）
+len(df)
+df['number'] = range(len(df))
+df
+
+# 列の演算
+df['tax'] = (0.1 * df['price']).round().astype(int)
+```
+
+```
+         date  item  price
+0  2020/05/01   foo  12345
+1  2020/05/01   bar  23456
+2  2020/05/02  hoge   3456
+3  2020/05/03  piyo    456
+4  2020/05/04  fuga     56
+
+         date  item  price  amount
+0  2020/05/01   foo  12345       0
+1  2020/05/01   bar  23456       0
+2  2020/05/02  hoge   3456       0
+3  2020/05/03  piyo    456       0
+4  2020/05/04  fuga     56       0
+
+         date  item  price  amount  number
+0  2020/05/01   foo  12345       0       0
+1  2020/05/01   bar  23456       0       1
+2  2020/05/02  hoge   3456       0       2
+3  2020/05/03  piyo    456       0       3
+4  2020/05/04  fuga     56       0       4
+
+         date  item  price  amount  number   tax
+0  2020/05/01   foo  12345       0       0  1234
+1  2020/05/01   bar  23456       0       1  2346
+2  2020/05/02  hoge   3456       0       2   346
+3  2020/05/03  piyo    456       0       3    46
+4  2020/05/04  fuga     56       0       4     6
+```
+
+<a id="markdown-assign" name="assign"></a>
+
+##### assign
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 23456, 3456, 456, 56]
+    })
+df
+
+# 定数
+df = df.assign(
+    amount=0,
+    number=range(len(df)),
+    tax=(0.1 * df['price']).round().astype(int)
+)
+df
+```
+
+```
+         date  item  price  amount  number   tax
+0 2020/05/01 foo 12345 0 0 1234
+1 2020/05/01 bar 23456 0 1 2346
+2 2020/05/02 hoge 3456 0 2 346
+3 2020/05/03 piyo 456 0 3 46
+4 2020/05/04 fuga 56 0 4 6
+```
+
+<a id="markdown-insert位置を指定して追加" name="insert位置を指定して追加"></a>
+
+##### insert（位置を指定して追加）
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 23456, 3456, 456, 56]
+    })
+df
+
+# 定数
+df.insert(
+    len(df.columns), # 挿入する位置を指定（ここでは末尾）
+    'number', # 列名
+    range(len(df)) # 値
+)
+df
+```
+
+```
+         date  item  price
+0  2020/05/01   foo  12345
+1  2020/05/01   bar  23456
+2  2020/05/02  hoge   3456
+3  2020/05/03  piyo    456
+4  2020/05/04  fuga     56
+
+         date  item  price  number
+0  2020/05/01   foo  12345       0
+1  2020/05/01   bar  23456       1
+2  2020/05/02  hoge   3456       2
+3  2020/05/03  piyo    456       3
+4  2020/05/04  fuga     56       4
+```
+
+<a id="markdown-concatdataframe-に-series-を列として追加" name="concatdataframe-に-series-を列として追加"></a>
+
+##### concat（DataFrame に Series を列として追加）
+
+```py
+import pandas as pd
+
+df = pd.DataFrame(
+    {
+        'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+        'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+        'price': [12345, 23456, 3456, 456, 56]
+    },
+    index=['r{}'.format(x+1) for x in range(5)]
+)
+df
+
+ss = pd.Series(range(1, 4, 1), index=['r{}'.format(x+2) for x in range(3)], name='number')
+ss
+
+# indexが同じレコードを連結する（存在しない場合は要素がNaN）
+df1 = pd.concat([df, ss], axis=1)
+print(df1)
+
+# indexが同じレコードを連結する（存在しない場合はレコード自体なくなる）
+df2 = pd.concat([df, ss], axis=1, join='inner')
+print(df2)
+
+# 3つ以上連結
+df3 = pd.concat([df, df, ss, ss], axis=1, join='inner')
+print(df3)
+```
+
+```
+          date  item  price
+r1  2020/05/01   foo  12345
+r2  2020/05/01   bar  23456
+r3  2020/05/02  hoge   3456
+r4  2020/05/03  piyo    456
+r5  2020/05/04  fuga     56
+
+r2    1
+r3    2
+r4    3
+Name: number, dtype: int64
+
+          date  item  price  number
+r1  2020/05/01   foo  12345     NaN
+r2  2020/05/01   bar  23456     1.0
+r3  2020/05/02  hoge   3456     2.0
+r4  2020/05/03  piyo    456     3.0
+r5  2020/05/04  fuga     56     NaN
+
+          date  item  price  number
+r2  2020/05/01   bar  23456       1
+r3  2020/05/02  hoge   3456       2
+r4  2020/05/03  piyo    456       3
+
+          date  item  price        date  item  price  number  number
+r2  2020/05/01   bar  23456  2020/05/01   bar  23456       1       1
+r3  2020/05/02  hoge   3456  2020/05/02  hoge   3456       2       2
+r4  2020/05/03  piyo    456  2020/05/03  piyo    456       3       3
+```
 
 <a id="markdown-転置" name="転置"></a>
 
@@ -3213,6 +3418,340 @@ r5      40.0  41.0  42.0  43.0   NaN  45.0  46.0  47.0  48.0  49.0
 <a id="markdown-データ結合" name="データ結合"></a>
 
 ## データ結合
+
+<a id="markdown-inner-join" name="inner-join"></a>
+
+### inner join
+
+```py
+import pandas as pd
+
+df1 = pd.DataFrame({
+    'key': ['a', 'b', 'c', 'd', 'e', 'f'],
+    'df1': range(6)
+})
+df2 = pd.DataFrame({
+    'key': ['c', 'a', 'b'],
+    'df2': range(3)
+})
+
+df1
+df2
+
+joined = pd.merge(df1, df2)
+# joined = pd.merge(df1, df2, how='inner')
+print(joined)
+
+# indexを使って結合
+joined_by_indexes = pd.merge(df1, df2, left_index=True, right_index=True)
+# joined_by_index_and_data = pd.merge(df1, df2, left_index=True, right_on='key') # 片方だけインデックス、片方はカラム、という指定方法も可能
+```
+
+```
+  key  df1
+0   a    0
+1   b    1
+2   c    2
+3   d    3
+4   e    4
+5   f    5
+
+  key  df2
+0   c    0
+1   a    1
+2   b    2
+
+  key  df1  df2
+0   a    0    1
+1   b    1    2
+2   c    2    0
+
+# indexを使って結合
+  key_x  df1 key_y  df2
+0     a    0     c    0
+1     b    1     a    1
+2     c    2     b    2
+```
+
+```py
+import pandas as pd
+
+df1 = pd.DataFrame({
+    'key1': ['a', 'b', 'c', 'd', 'e', 'f'],
+    'key2': ['a', 'c', 'e', 'b', 'd', 'f'],
+    'df1': range(6)
+})
+df2 = pd.DataFrame({
+    'key1': ['c', 'a', 'b'],
+    'key2': ['c', 'b', 'a'],
+    'df2': range(3)
+})
+
+df1
+df2
+
+joined1 = pd.merge(df1, df2, on='key2')
+print(joined1)
+
+joined2 = pd.merge(df1, df2, left_on='key1', right_on='key2')
+print(joined2)
+
+# 接尾辞（サフィックス）を、「_x」「_y」から変更する
+joined3 = pd.merge(df1, df2, on='key1', suffixes=('_LEFT', '_RIGHT'))
+print(joined3)
+```
+
+```
+  key1 key2  df1
+0    a    a    0
+1    b    c    1
+2    c    e    2
+3    d    b    3
+4    e    d    4
+5    f    f    5
+
+  key1 key2  df2
+0    c    c    0
+1    a    b    1
+2    b    a    2
+
+  key1_x key2  df1 key1_y  df2
+0      a    a    0      b    2
+1      b    c    1      c    0
+2      d    b    3      a    1
+
+  key1_x key2_x  df1 key1_y key2_y  df2
+0      a      a    0      b      a    2
+1      b      c    1      a      b    1
+2      c      e    2      c      c    0
+
+# 接尾辞（サフィックス）を、「_x」「_y」から変更する
+  key1 key2_LEFT  df1 key2_RIGHT  df2
+0    a         a    0          b    1
+1    b         c    1          a    2
+2    c         e    2          c    0
+```
+
+<a id="markdown-複数キー" name="複数キー"></a>
+
+#### 複数キー
+
+```py
+import pandas as pd
+
+df1 = pd.DataFrame({
+    'key1': ['a', 'b', 'c', 'd', 'e', 'f'],
+    'key2': ['c', 'a', 'c', 'b', 'd', 'f'],
+    'df1': range(6)
+})
+df2 = pd.DataFrame({
+    'key1': ['c', 'a', 'b'],
+    'key2': ['c', 'b', 'a'],
+    'df2': range(3)
+})
+
+df1
+df2
+
+joined = pd.merge(df1, df2, on=['key1', 'key2'])
+print(joined)
+```
+
+```
+  key1 key2  df1  df2
+0    b    a    1    2
+1    c    c    2    0
+```
+
+<a id="markdown-left-join" name="left-join"></a>
+
+### left join
+
+```py
+import pandas as pd
+
+df1 = pd.DataFrame({
+    'key': ['a', 'b', 'c', 'd', 'e', 'f'],
+    'df1': range(6)
+})
+df2 = pd.DataFrame({
+    'key': ['c', 'a', 'b'],
+    'df2': range(3)
+})
+
+df1
+df2
+
+joined = pd.merge(df1, df2, how='left')
+print(joined)
+```
+
+```
+  key  df1
+0   a    0
+1   b    1
+2   c    2
+3   d    3
+4   e    4
+5   f    5
+
+  key  df2
+0   c    0
+1   a    1
+2   b    2
+
+  key  df1  df2
+0   a    0  1.0
+1   b    1  2.0
+2   c    2  0.0
+3   d    3  NaN
+4   e    4  NaN
+5   f    5  NaN
+```
+
+```py
+import pandas as pd
+
+df1 = pd.DataFrame({
+    'key1': ['a', 'b', 'c', 'd', 'e', 'f'],
+    'key2': ['a', 'c', 'e', 'b', 'd', 'f'],
+    'df1': range(6)
+})
+df2 = pd.DataFrame({
+    'key1': ['c', 'a', 'b'],
+    'key2': ['c', 'b', 'a'],
+    'df2': range(3)
+})
+
+df1
+df2
+
+joined1 = pd.merge(df1, df2, how='left', on='key2')
+print(joined1)
+
+joined2 = pd.merge(df1, df2, how='left', left_on='key1', right_on='key2')
+print(joined2)
+```
+
+```
+  key1 key2  df1
+0    a    a    0
+1    b    c    1
+2    c    e    2
+3    d    b    3
+4    e    d    4
+5    f    f    5
+
+  key1 key2  df2
+0    c    c    0
+1    a    b    1
+2    b    a    2
+
+  key1_x key2  df1 key1_y  df2
+0      a    a    0      b  2.0
+1      b    c    1      c  0.0
+2      c    e    2    NaN  NaN
+3      d    b    3      a  1.0
+4      e    d    4    NaN  NaN
+5      f    f    5    NaN  NaN
+
+  key1_x key2_x  df1 key1_y key2_y  df2
+0      a      a    0      b      a  2.0
+1      b      c    1      a      b  1.0
+2      c      e    2      c      c  0.0
+3      d      b    3    NaN    NaN  NaN
+4      e      d    4    NaN    NaN  NaN
+5      f      f    5    NaN    NaN  NaN
+```
+
+<a id="markdown-right-join" name="right-join"></a>
+
+### right join
+
+```py
+import pandas as pd
+
+df1 = pd.DataFrame({
+    'key': ['a', 'b', 'c', 'd', 'e', 'f'],
+    'df1': range(6)
+})
+df2 = pd.DataFrame({
+    'key': ['c', 'a', 'b'],
+    'df2': range(3)
+})
+
+df1
+df2
+
+joined = pd.merge(df1, df2, how='right')
+print(joined)
+```
+
+```
+  key  df1
+0   a    0
+1   b    1
+2   c    2
+3   d    3
+4   e    4
+5   f    5
+
+  key  df2
+0   c    0
+1   a    1
+2   b    2
+
+  key  df1  df2
+0   a    0    1
+1   b    1    2
+2   c    2    0
+```
+
+<a id="markdown-outer-join" name="outer-join"></a>
+
+### outer join
+
+```py
+import pandas as pd
+
+df1 = pd.DataFrame({
+    'key': ['a', 'b', 'c', 'd', 'e', 'f'],
+    'df1': range(6)
+})
+df2 = pd.DataFrame({
+    'key': ['c', 'a', 'b'],
+    'df2': range(3)
+})
+
+df1
+df2
+
+joined = pd.merge(df1, df2, how='outer')
+print(joined)
+```
+
+```
+  key  df1
+0   a    0
+1   b    1
+2   c    2
+3   d    3
+4   e    4
+5   f    5
+
+  key  df2
+0   c    0
+1   a    1
+2   b    2
+
+  key  df1  df2
+0   a    0  1.0
+1   b    1  2.0
+2   c    2  0.0
+3   d    3  NaN
+4   e    4  NaN
+5   f    5  NaN
+```
 
 <a id="markdown-データ要約" name="データ要約"></a>
 
