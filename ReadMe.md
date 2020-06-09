@@ -116,6 +116,13 @@
   - [データ要約](#データ要約)
   - [グループ化](#グループ化)
   - [データ可視化](#データ可視化)
+- [Numpy](#numpy)
+- [Scipy](#scipy)
+- [Pillow（PIL）](#pillowpil-1)
+- [scikit-learn](#scikit-learn-1)
+- [Keras](#keras-1)
+- [TensorFlow](#tensorflow)
+- [Matplotlib](#matplotlib-1)
 
 <!-- /TOC -->
 
@@ -3851,6 +3858,34 @@ print(joined)
 <a id="markdown-データ可視化" name="データ可視化"></a>
 
 ## データ可視化
+
+<a id="markdown-numpy" name="numpy"></a>
+
+# Numpy
+
+<a id="markdown-scipy" name="scipy"></a>
+
+# Scipy
+
+<a id="markdown-pillowpil-1" name="pillowpil-1"></a>
+
+# Pillow（PIL）
+
+<a id="markdown-scikit-learn-1" name="scikit-learn-1"></a>
+
+# scikit-learn
+
+<a id="markdown-keras-1" name="keras-1"></a>
+
+# Keras
+
+<a id="markdown-tensorflow" name="tensorflow"></a>
+
+# TensorFlow
+
+<a id="markdown-matplotlib-1" name="matplotlib-1"></a>
+
+# Matplotlib
 
 <hr>
 
