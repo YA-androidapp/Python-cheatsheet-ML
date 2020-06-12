@@ -107,13 +107,15 @@
           - [定数で置換](#定数で置換)
           - [統計量で置換](#統計量で置換)
           - [前後の要素で置換](#前後の要素で置換)
+    - [特徴量エンジニアリング](#特徴量エンジニアリング)
+      - [ビニング処理（ビン分割）](#ビニング処理ビン分割)
+      - [カテゴリ変数のエンコーディング](#カテゴリ変数のエンコーディング)
   - [データ結合](#データ結合)
     - [inner join](#inner-join)
       - [複数キー](#複数キー)
     - [left join](#left-join)
     - [right join](#right-join)
     - [outer join](#outer-join)
-  - [データ要約](#データ要約)
   - [グループ化](#グループ化)
   - [データ可視化](#データ可視化)
 - [Numpy](#numpy)
@@ -1727,15 +1729,6 @@ df['c1'].median()
 # 分位数（第1四分位数、第3四分位数）
 df.quantile(q=[0.25, 0.75], numeric_only=True) # Falseの場合、bool型の列のtrueは1、falseは0と見なされる
 df['c1'].quantile(q=[0.25, 0.75])
-
-
-
-
-
-
-
-
-
 ```
 
 ```
@@ -3509,6 +3502,198 @@ r4      30.0  31.0  32.0  43.0  34.0  35.0  46.0  47.0  48.0  49.0
 r5      40.0  41.0  42.0  43.0   NaN  45.0  46.0  47.0  48.0  49.0
 ```
 
+<a id="markdown-特徴量エンジニアリング" name="特徴量エンジニアリング"></a>
+
+### 特徴量エンジニアリング
+
+<a id="markdown-ビニング処理ビン分割" name="ビニング処理ビン分割"></a>
+
+#### ビニング処理（ビン分割）
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'item': ['foo1', 'bar1', 'hoge1', 'piyo1', 'fuga1', 'foo2', 'bar2', 'hoge2', 'piyo2', 'fuga2'],
+    'price': [2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+    })
+print(df)
+
+# 値で3分割
+# df.priceはpandas.Seriesになる（df[['price']]だとNG）
+df_cut1 = pd.cut(df.price, 3, labels=['small', 'medium', 'large'])
+print(df_cut1)
+
+# 境界値を指定して分割
+df_cut2 = pd.cut(df.price, [2, 5, 50, 100], labels=['small', 'medium', 'large'])
+print(df_cut2)
+
+# 各ビンに含まれる要素数が等しくなるように分割
+df_cut3 = pd.qcut(df.price, 3, labels=['small', 'medium', 'large'])
+print(df_cut3)
+
+# 4分位数で分割
+df_qua, bins = pd.qcut(df.price, 4, labels=['Q1', 'Q2', 'Q3', 'Q4'], retbins=True)
+print(df_qua)
+print(bins)
+```
+
+```
+# df
+
+    item  price
+0   foo1      2
+1   bar1      3
+2  hoge1      5
+3  piyo1      8
+4  fuga1     13
+5   foo2     21
+6   bar2     34
+7  hoge2     55
+8  piyo2     89
+9  fuga2    144
+
+
+# 値で3分割
+
+0     small
+1     small
+2     small
+3     small
+4     small
+5     small
+6     small
+7    medium
+8    medium
+9     large
+Name: price, dtype: category
+Categories (3, object): [small < medium < large]
+
+
+# 境界値を指定して分割
+
+0       NaN
+1     small
+2     small
+3    medium
+4    medium
+5    medium
+6    medium
+7     large
+8     large
+9       NaN
+Name: price, dtype: category
+Categories (3, object): [small < medium < large]
+
+
+# 各ビンに含まれる要素数が等しくなるように分割
+
+0     small
+1     small
+2     small
+3     small
+4    medium
+5    medium
+6    medium
+7     large
+8     large
+9     large
+Name: price, dtype: category
+Categories (3, object): [small < medium < large]
+
+
+# 4分位数で分割
+
+0    Q1
+1    Q1
+2    Q1
+3    Q2
+4    Q2
+5    Q3
+6    Q3
+7    Q4
+8    Q4
+9    Q4
+Name: price, dtype: category
+Categories (4, object): [Q1 < Q2 < Q3 < Q4]
+
+[  2.     5.75  17.    49.75 144.  ]
+```
+
+<a id="markdown-カテゴリ変数のエンコーディング" name="カテゴリ変数のエンコーディング"></a>
+
+#### カテゴリ変数のエンコーディング
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/02', '2020/05/02', '2020/05/03', '2020/05/03', '2020/05/04'],
+    'price': [12345, 23456, 3456, 456, 56, 56, 7, 8, 9, 0]
+    })
+print(df)
+
+# カテゴリ変数の値の種類を確認する
+counts = df['date'].value_counts()
+print(counts)
+
+# ワンホットエンコーディング（ダミー変数）
+df_dummy = pd.get_dummies(df['date'])
+print(df_dummy)
+
+# ラベルエンコーディング
+df['date_cat'] = df['date'].astype('category')
+df.dtypes
+df['date_label'] = df['date_cat'].cat.codes
+```
+
+```
+         date  price
+0  2020/05/01  12345
+1  2020/05/01  23456
+2  2020/05/01   3456
+3  2020/05/01    456
+4  2020/05/02     56
+5  2020/05/02     56
+6  2020/05/02      7
+7  2020/05/03      8
+8  2020/05/03      9
+9  2020/05/04      0
+
+# カテゴリカルデータの値の種類を確認する
+2020/05/01    4
+2020/05/02    3
+2020/05/03    2
+2020/05/04    1
+Name: date, dtype: int64
+
+# ワンホットエンコーディング（ダミー変数）
+   2020/05/01  2020/05/02  2020/05/03  2020/05/04
+0           1           0           0           0
+1           1           0           0           0
+2           1           0           0           0
+3           1           0           0           0
+4           0           1           0           0
+5           0           1           0           0
+6           0           1           0           0
+7           0           0           1           0
+8           0           0           1           0
+9           0           0           0           1
+
+# ラベルエンコーディング
+         date  price    date_cat  date_label
+0  2020/05/01  12345  2020/05/01           0
+1  2020/05/01  23456  2020/05/01           0
+2  2020/05/01   3456  2020/05/01           0
+3  2020/05/01    456  2020/05/01           0
+4  2020/05/02     56  2020/05/02           1
+5  2020/05/02     56  2020/05/02           1
+6  2020/05/02      7  2020/05/02           1
+7  2020/05/03      8  2020/05/03           2
+8  2020/05/03      9  2020/05/03           2
+9  2020/05/04      0  2020/05/04           3
+```
+
 <a id="markdown-データ結合" name="データ結合"></a>
 
 ## データ結合
@@ -3847,13 +4032,91 @@ print(joined)
 5   f    5  NaN
 ```
 
-<a id="markdown-データ要約" name="データ要約"></a>
-
-## データ要約
-
 <a id="markdown-グループ化" name="グループ化"></a>
 
 ## グループ化
+
+```py
+import pandas as pd
+
+
+data_url =  "https://gist.githubusercontent.com/netj/8836201/raw/6f9306ad21398ea43cba4f7d537619d0e07d5ae3/iris.csv"
+
+
+# df
+df = pd.read_csv(data_url)
+print(df)
+
+# groupby
+df_groupby = df.groupby('variety').mean()
+df_groupby.sort_values('sepal.length', ascending=False)
+
+# agg
+#   variety と petal.width をグルーピングして sepal.length に集約関数を適用
+aggregation = {'sepal.length':['median',  'mean', 'min', 'max']}
+df_agg = df.groupby(['variety', 'petal.width']).agg(aggregation).reset_index()
+```
+
+```
+# df
+
+     sepal.length  sepal.width  petal.length  petal.width    variety
+0             5.1          3.5           1.4          0.2     Setosa
+1             4.9          3.0           1.4          0.2     Setosa
+2             4.7          3.2           1.3          0.2     Setosa
+3             4.6          3.1           1.5          0.2     Setosa
+4             5.0          3.6           1.4          0.2     Setosa
+..            ...          ...           ...          ...        ...
+145           6.7          3.0           5.2          2.3  Virginica
+146           6.3          2.5           5.0          1.9  Virginica
+147           6.5          3.0           5.2          2.0  Virginica
+148           6.2          3.4           5.4          2.3  Virginica
+149           5.9          3.0           5.1          1.8  Virginica
+
+[150 rows x 5 columns]
+
+
+# groupby
+
+            sepal.length  sepal.width  petal.length  petal.width
+variety
+Virginica          6.588        2.974         5.552        2.026
+Versicolor         5.936        2.770         4.260        1.326
+Setosa             5.006        3.428         1.462        0.246
+
+
+# agg
+
+       variety petal.width sepal.length
+                                 median      mean  min  max
+0       Setosa         0.1         4.90  4.820000  4.3  5.2
+1       Setosa         0.2         5.00  4.972414  4.4  5.8
+2       Setosa         0.3         5.00  4.971429  4.5  5.7
+3       Setosa         0.4         5.40  5.300000  5.0  5.7
+4       Setosa         0.5         5.10  5.100000  5.1  5.1
+5       Setosa         0.6         5.00  5.000000  5.0  5.0
+6   Versicolor         1.0         5.50  5.414286  4.9  6.0
+7   Versicolor         1.1         5.50  5.400000  5.1  5.6
+8   Versicolor         1.2         5.80  5.780000  5.5  6.1
+9   Versicolor         1.3         5.70  5.884615  5.5  6.6
+10  Versicolor         1.4         6.60  6.357143  5.2  7.0
+11  Versicolor         1.5         6.25  6.190000  5.4  6.9
+12  Versicolor         1.6         6.00  6.100000  6.0  6.3
+13  Versicolor         1.7         6.70  6.700000  6.7  6.7
+14  Versicolor         1.8         5.90  5.900000  5.9  5.9
+15   Virginica         1.4         6.10  6.100000  6.1  6.1
+16   Virginica         1.5         6.15  6.150000  6.0  6.3
+17   Virginica         1.6         7.20  7.200000  7.2  7.2
+18   Virginica         1.7         4.90  4.900000  4.9  4.9
+19   Virginica         1.8         6.30  6.445455  5.9  7.3
+20   Virginica         1.9         6.30  6.340000  5.8  7.4
+21   Virginica         2.0         6.50  6.650000  5.6  7.9
+22   Virginica         2.1         6.85  6.916667  6.4  7.6
+23   Virginica         2.2         6.50  6.866667  6.4  7.7
+24   Virginica         2.3         6.85  6.912500  6.2  7.7
+25   Virginica         2.4         6.30  6.266667  5.8  6.7
+26   Virginica         2.5         6.70  6.733333  6.3  7.2
+```
 
 <a id="markdown-データ可視化" name="データ可視化"></a>
 
