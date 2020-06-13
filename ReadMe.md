@@ -88,7 +88,10 @@
       - [条件に適合する列を抽出](#条件に適合する列を抽出)
         - [ブールインデックス](#ブールインデックス-1)
       - [欠損値を除去](#欠損値を除去)
-      - [ランダムソート](#ランダムソート)
+      - [ソート](#ソート)
+        - [行や列の値でソート](#行や列の値でソート)
+        - [行や列のインデックスでソート](#行や列のインデックスでソート)
+        - [ランダムソート](#ランダムソート)
   - [データ加工](#データ加工-1)
     - [追加](#追加)
       - [行の追加](#行の追加)
@@ -99,6 +102,7 @@
         - [assign](#assign)
         - [insert（位置を指定して追加）](#insert位置を指定して追加)
         - [concat（DataFrame に Series を列として追加）](#concatdataframe-に-series-を列として追加)
+    - [要素に対する演算](#要素に対する演算)
     - [転置](#転置)
     - [値の置換](#値の置換)
       - [欠損値](#欠損値)
@@ -2771,9 +2775,93 @@ r4      30.0  31.0  32.0  33.0  34.0  35.0  36.0  37.0  38.0  39.0
 r5      40.0  41.0  42.0  43.0  44.0  45.0  46.0  47.0  48.0  49.0
 ```
 
+<a id="markdown-ソート" name="ソート"></a>
+
+#### ソート
+
+<a id="markdown-行や列の値でソート" name="行や列の値でソート"></a>
+
+##### 行や列の値でソート
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(200).reshape(20, 10), index=pd.Index(['r{}'.format(x+1) for x in range(20)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+df.head()
+
+# df_random1 = df.sort_values('c1', ascending=False)
+df_random1 = df.sort_values(['c1', 'c2'], ascending=[False, False])
+df_random1.head()
+
+```
+
+```
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+column   c1   c2   c3   c4   c5   c6   c7   c8   c9  c10
+index
+r20     190  191  192  193  194  195  196  197  198  199
+r19     180  181  182  183  184  185  186  187  188  189
+r18     170  171  172  173  174  175  176  177  178  179
+r17     160  161  162  163  164  165  166  167  168  169
+r16     150  151  152  153  154  155  156  157  158  159
+```
+
+<a id="markdown-行や列のインデックスでソート" name="行や列のインデックスでソート"></a>
+
+##### 行や列のインデックスでソート
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(200).reshape(20, 10), index=pd.Index(['r{}'.format(x+1) for x in range(20)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+df.head()
+
+df_random1 = df.sort_index(axis=0, ascending=False)
+df_random1.head()
+
+df_random2 = df.sort_index(axis=1, ascending=False)
+df_random2.head()
+
+```
+
+```
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r9      80  81  82  83  84  85  86  87  88   89
+r8      70  71  72  73  74  75  76  77  78   79
+r7      60  61  62  63  64  65  66  67  68   69
+r6      50  51  52  53  54  55  56  57  58   59
+r5      40  41  42  43  44  45  46  47  48   49
+
+column  c9  c8  c7  c6  c5  c4  c3  c2  c10  c1
+index
+r1       8   7   6   5   4   3   2   1    9   0
+r2      18  17  16  15  14  13  12  11   19  10
+r3      28  27  26  25  24  23  22  21   29  20
+r4      38  37  36  35  34  33  32  31   39  30
+r5      48  47  46  45  44  43  42  41   49  40
+```
+
 <a id="markdown-ランダムソート" name="ランダムソート"></a>
 
-#### ランダムソート
+##### ランダムソート
 
 ```py
 import numpy as np
@@ -3206,6 +3294,82 @@ r4  2020/05/03  piyo    456       3
 r2  2020/05/01   bar  23456  2020/05/01   bar  23456       1       1
 r3  2020/05/02  hoge   3456  2020/05/02  hoge   3456       2       2
 r4  2020/05/03  piyo    456  2020/05/03  piyo    456       3       3
+```
+
+<a id="markdown-要素に対する演算" name="要素に対する演算"></a>
+
+### 要素に対する演算
+
+```py
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame(np.arange(50).reshape(5, 10), index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
+print(df)
+
+# 各要素に対する演算
+print(df + 1)
+
+# 各列に対する演算
+print(
+    df.apply(lambda c: c['r1']*c['r5'], axis=0)
+)
+
+# 各行に対する演算
+print(
+    df.apply(lambda r: pd.Series(dict(a=r['c1']+r['c10'], b=r['c1']*r['c10'])), axis=1)
+)
+
+```
+
+```
+# print(df)
+
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
+r2      10  11  12  13  14  15  16  17  18   19
+r3      20  21  22  23  24  25  26  27  28   29
+r4      30  31  32  33  34  35  36  37  38   39
+r5      40  41  42  43  44  45  46  47  48   49
+
+
+# 各要素に対する演算
+
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       1   2   3   4   5   6   7   8   9   10
+r2      11  12  13  14  15  16  17  18  19   20
+r3      21  22  23  24  25  26  27  28  29   30
+r4      31  32  33  34  35  36  37  38  39   40
+r5      41  42  43  44  45  46  47  48  49   50
+
+
+# 各列に対する演算
+
+column
+c1       0
+c2      41
+c3      84
+c4     129
+c5     176
+c6     225
+c7     276
+c8     329
+c9     384
+c10    441
+dtype: int64
+
+
+# 各行に対する演算
+
+        a     b
+index
+r1      9     0
+r2     29   190
+r3     49   580
+r4     69  1170
+r5     89  1960
 ```
 
 <a id="markdown-転置" name="転置"></a>
