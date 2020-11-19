@@ -18,6 +18,7 @@
     - [再度動作確認](#再度動作確認)
   - [Keras](#keras)
   - [Matplotlib](#matplotlib)
+  - [PyCaret](#pycaret)
 - [pandas](#pandas)
   - [おまじない](#おまじない)
     - [パッケージの読み込み](#パッケージの読み込み)
@@ -42,6 +43,7 @@
         - [読み込むデータ型を指定](#読み込むデータ型を指定)
         - [欠損値処理](#欠損値処理)
         - [読み込む文字コードを指定](#読み込む文字コードを指定)
+        - [標準入力から読み込む](#標準入力から読み込む)
         - [圧縮された CSV ファイルを読み込む](#圧縮された-csv-ファイルを読み込む)
         - [Web 上の CSV ファイルを読み込む](#web-上の-csv-ファイルを読み込む)
         - [時系列データ](#時系列データ)
@@ -75,9 +77,22 @@
           - [連番にリセットする](#連番にリセットする)
       - [行名・列名、行数・列数・要素数](#行名・列名行数・列数・要素数-1)
       - [欠損値の数](#欠損値の数)
+      - [行ごとに処理](#行ごとに処理)
+        - [行ごとに値を更新](#行ごとに値を更新)
+      - [行ごとに処理](#行ごとに処理-1)
       - [行を絞る](#行を絞る)
         - [先頭](#先頭)
         - [末尾](#末尾)
+        - [行を削除](#行を削除)
+          - [行名を指定して削除](#行名を指定して削除)
+          - [行番号を指定して削除](#行番号を指定して削除)
+          - [行も列もまとめて削除（行名・列名／行番号・列番号）](#行も列もまとめて削除行名・列名／行番号・列番号)
+        - [重複を除去](#重複を除去)
+      - [列を絞る](#列を絞る)
+        - [列を削除](#列を削除)
+          - [列名を指定して削除](#列名を指定して削除)
+          - [列番号を指定して削除](#列番号を指定して削除)
+          - [行も列もまとめて削除（行名・列名／行番号・列番号）](#行も列もまとめて削除行名・列名／行番号・列番号-1)
       - [インデックスから行と列を絞る（DataFrame）](#インデックスから行と列を絞るdataframe)
         - [行または列](#行または列)
         - [行と列](#行と列)
@@ -86,6 +101,7 @@
       - [条件に適合する行を抽出](#条件に適合する行を抽出)
         - [ブールインデックス](#ブールインデックス)
         - [query メソッド](#query-メソッド)
+        - [行インデックスを条件に指定する](#行インデックスを条件に指定する)
       - [条件に適合する列を抽出](#条件に適合する列を抽出)
         - [ブールインデックス](#ブールインデックス-1)
       - [欠損値を除去](#欠損値を除去)
@@ -138,6 +154,13 @@
 - [Keras](#keras-1)
 - [TensorFlow](#tensorflow)
 - [Matplotlib](#matplotlib-1)
+  - [PyCaret](#pycaret-1)
+  - [データ読み込み](#データ読み込み)
+    - [pandas](#pandas-1)
+    - [サンプルデータ](#サンプルデータ)
+      - [リポジトリ](#リポジトリ)
+  - [分析手法の選択](#分析手法の選択)
+    - [モデルと評価指標の比較](#モデルと評価指標の比較)
 
 <!-- /TOC -->
 
@@ -492,6 +515,50 @@ $ source ./myenv/bin/activate
 (myenv)$ python -m pip install matplotlib
 
 (myenv)$ python -c "import matplotlib; print(matplotlib.__version__)" # 動作確認
+```
+
+<a id="markdown-pycaret" name="pycaret"></a>
+
+## PyCaret
+
+（Windows）
+
+```powershell
+$ python -m pip install -U pip
+$ python -m venv myenv
+$ .\myenv\Scripts\activate
+(myenv)$ python -m pip install pycaret
+
+(myenv)$ python -c "from pycaret.utils import version;version()" # 動作確認
+```
+
+```
+
+```
+
+---
+
+（Mac）
+
+```sh
+# Macでは別途LightGBMをインストールする必要がある
+$ brew install cmake
+$ brew install libomp
+$ git clone --recursive https://github.com/microsoft/LightGBM ; cd LightGBM
+$ mkdir build ; cd build
+$ cmake ..
+$ make -j4
+
+$ python -m pip install -U pip
+$ python -m venv myenv
+$ source ./myenv/bin/activate
+(myenv)$ python -m pip install pycaret
+
+(myenv)$ python -c "from pycaret.utils import version;version()" # 動作確認
+```
+
+```
+1.0.0
 ```
 
 <a id="markdown-pandas" name="pandas"></a>
@@ -1252,6 +1319,34 @@ import pandas as pd
 pd.read_csv('data/pandas/read_csv_sjis.csv', encoding='cp932')
 
 pd.read_csv('data/pandas/read_csv_sjis.csv', encoding='shift_jis')
+```
+
+<a id="markdown-標準入力から読み込む" name="標準入力から読み込む"></a>
+
+##### 標準入力から読み込む
+
+`read_csv()` に、ファイルパスを指定する代わりに `sys.stdin` を指定すれば良い
+
+```sh
+$ python .\python\pd_read_csv.py < .\data\pandas\read_csv.csv
+```
+
+```pwsh
+$ Get-Content .\data\pandas\read_csv.csv | python .\python\pd_read_csv.py
+```
+
+```py
+import pandas as pd
+import sys
+
+df1 = pd.read_csv(sys.stdin)
+print(df1)
+```
+
+```
+   11  12  13  14
+0  21  22  23  24
+1  31  32  33  34
 ```
 
 <a id="markdown-圧縮された-csv-ファイルを読み込む" name="圧縮された-csv-ファイルを読み込む"></a>
@@ -2214,6 +2309,169 @@ r5    10
 dtype: int64
 ```
 
+<a id="markdown-行ごとに処理" name="行ごとに処理"></a>
+
+#### 行ごとに処理
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    })
+
+for idx, row in df.iterrows():
+    # print(idx, row)
+    print(idx, row['date']) # print(idx, row.date) と同じ
+```
+
+> 0 2020/05/01
+>
+> 1 2020/05/01
+>
+> 2 2020/05/01
+>
+> 3 2020/05/02
+>
+> 4 2020/05/03
+>
+> 5 2020/05/04
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    })
+
+for row in df.itertuples():
+    print(row.Index, row.item)
+
+for row in df.itertuples(name=None): # 列名を追加しない
+    print(row)
+```
+
+> 0 foo
+>
+> 1 foo
+>
+> 2 bar
+>
+> 3 hoge
+>
+> 4 piyo
+>
+> 5 fuga
+
+> (0, '2020/05/01', 'foo', 12345)
+>
+> (1, '2020/05/01', 'foo', 12345)
+>
+> (2, '2020/05/01', 'bar', 23456)
+>
+> (3, '2020/05/02', 'hoge', 3456)
+>
+> (4, '2020/05/03', 'piyo', 456)
+>
+> (5, '2020/05/04', 'fuga', 56)
+
+<a id="markdown-行ごとに値を更新" name="行ごとに値を更新"></a>
+
+##### 行ごとに値を更新
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': [3, 4, 5, 6, 7, 8],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    })
+
+# df['price'] += df['item'] と同じ
+for idx, row in df.iterrows():
+    df.at[idx, 'price'] += row['item']
+
+df
+```
+
+>          date  item  price
+>
+> 0 2020/05/01 3 12348
+>
+> 1 2020/05/01 4 12349
+>
+> 2 2020/05/01 5 23461
+>
+> 3 2020/05/02 6 3462
+>
+> 4 2020/05/03 7 463
+>
+> 5 2020/05/04 8 64
+
+<a id="markdown-行ごとに処理-1" name="行ごとに処理-1"></a>
+
+#### 行ごとに処理
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    })
+
+for col, val in df.iteritems():
+    print(col, val)
+```
+
+> date 0 2020/05/01
+>
+> 1 2020/05/01
+>
+> 2 2020/05/01
+>
+> 3 2020/05/02
+>
+> 4 2020/05/03
+>
+> 5 2020/05/04
+>
+> Name: date, dtype: object
+>
+> item 0 foo
+>
+> 1 foo
+>
+> 2 bar
+>
+> 3 hoge
+>
+> 4 piyo
+>
+> 5 fuga
+>
+> Name: item, dtype: object
+>
+> price 0 12345
+>
+> 1 12345
+>
+> 2 23456
+>
+> 3 3456
+>
+> 4 456
+>
+> 5 56
+>
+> Name: price, dtype: int64
+
 <a id="markdown-行を絞る" name="行を絞る"></a>
 
 #### 行を絞る
@@ -2259,8 +2517,8 @@ import pandas as pd
 
 df = pd.DataFrame(np.arange(100).reshape(10, 10), index=pd.Index(['r{}'.format(x+1) for x in range(10)], name = 'index'), columns=pd.Index(['c{}'.format(x+1) for x in range(10)], name= 'column'))
 
-df.head() # 先頭5行
-df.head(2) # 先頭2行
+df.tail() # 末尾5行
+df.tail(2) # 末尾2行
 ```
 
 ```
@@ -2279,6 +2537,311 @@ index
 r9      80  81  82  83  84  85  86  87  88   89
 r10     90  91  92  93  94  95  96  97  98   99
 ```
+
+<a id="markdown-行を削除" name="行を削除"></a>
+
+##### 行を削除
+
+<a id="markdown-行名を指定して削除" name="行名を指定して削除"></a>
+
+###### 行名を指定して削除
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': [3, 4, 5, 6, 7, 8],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    },
+    index=pd.Index(['r{}'.format(x+1) for x in range(6)], name = 'index')
+)
+
+# df = df.drop(index='r2') 、 df.drop(labels='r2', axis=0) と同じ
+# 元のDataFrameを書き換えたい場合は inplace=True を指定
+df = df.drop('r2') # axis=0が既定値なので行削除の場合は省略可
+
+# 複数行をまとめて削除
+df = df.drop(['r4', 'r6'])
+
+df
+```
+
+>              date  item  price
+>
+> index
+>
+> r1 2020/05/01 3 12345
+>
+> r3 2020/05/01 5 23456
+>
+> r5 2020/05/03 7 456
+
+<a id="markdown-行番号を指定して削除" name="行番号を指定して削除"></a>
+
+###### 行番号を指定して削除
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': [3, 4, 5, 6, 7, 8],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    },
+    index=pd.Index(['r{}'.format(x+1) for x in range(6)], name = 'index')
+)
+
+df = df.drop(df.index[[1]])
+
+# 複数行をまとめて削除
+df = df.drop(df.index[[2, 4]])
+
+df
+```
+
+>              date  item  price
+>
+> index
+>
+> r1 2020/05/01 3 12345
+>
+> r3 2020/05/01 5 23456
+>
+> r5 2020/05/03 7 456
+
+<a id="markdown-行も列もまとめて削除行名・列名／行番号・列番号" name="行も列もまとめて削除行名・列名／行番号・列番号"></a>
+
+###### 行も列もまとめて削除（行名・列名／行番号・列番号）
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': [3, 4, 5, 6, 7, 8],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    },
+    index=pd.Index(['r{}'.format(x+1) for x in range(6)], name = 'index')
+)
+
+df.drop(
+    index=['r1', 'r2', 'r3'],
+    columns=['item']
+)
+
+df.drop(
+    index=df.index[[0, 1, 2]],
+    columns=df.columns[[1]]
+)
+```
+
+>              date  price
+>
+> index
+>
+> r4 2020/05/02 3456
+>
+> r5 2020/05/03 456
+>
+> r6 2020/05/04 56
+
+<a id="markdown-重複を除去" name="重複を除去"></a>
+
+##### 重複を除去
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': ['foo', 'foo', 'bar', 'hoge', 'piyo', 'fuga'],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    })
+
+# 元のDataFrame
+print(df)
+
+# 重複している行
+df_selected = df[df.duplicated()]
+print(df_selected)
+
+# 重複を除去したDataFrame
+df_removed = df.drop_duplicates()
+print(df_removed)
+```
+
+> \# print(df)
+>
+>          date  item  price
+>
+> 0 2020/05/01 foo 12345
+>
+> 1 2020/05/01 foo 12345
+>
+> 2 2020/05/01 bar 23456
+>
+> 3 2020/05/02 hoge 3456
+>
+> 4 2020/05/03 piyo 456
+>
+> 5 2020/05/04 fuga 56
+
+> \# print(df_selected)
+>
+>          date item  price
+>
+> 1 2020/05/01 foo 12345
+
+> \# print(df_removed)
+>
+>          date  item  price
+>
+> 0 2020/05/01 foo 12345
+>
+> 2 2020/05/01 bar 23456
+>
+> 3 2020/05/02 hoge 3456
+>
+> 4 2020/05/03 piyo 456
+>
+> 5 2020/05/04 fuga 56
+
+<a id="markdown-列を絞る" name="列を絞る"></a>
+
+#### 列を絞る
+
+<a id="markdown-列を削除" name="列を削除"></a>
+
+##### 列を削除
+
+<a id="markdown-列名を指定して削除" name="列名を指定して削除"></a>
+
+###### 列名を指定して削除
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': [3, 4, 5, 6, 7, 8],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    },
+    index=pd.Index(['r{}'.format(x+1) for x in range(6)], name = 'index')
+)
+
+# df = df.drop(index='r2') 、 df.drop(labels='r2', axis=0) と同じ
+# 元のDataFrameを書き換えたい場合は inplace=True を指定
+df.drop('item', axis=1)
+
+# 複数列をまとめて削除
+df = df.drop(['date', 'item'], axis=1)
+df
+```
+
+>              date  price
+>
+> index
+>
+> r1 2020/05/01 12345
+>
+> r2 2020/05/01 12345
+>
+> r3 2020/05/01 23456
+>
+> r4 2020/05/02 3456
+>
+> r5 2020/05/03 456
+>
+> r6 2020/05/04 56
+
+>        price
+>
+> index
+>
+> r1 12345
+>
+> r2 12345
+>
+> r3 23456
+>
+> r4 3456
+>
+> r5 456
+>
+> r6 56
+
+<a id="markdown-列番号を指定して削除" name="列番号を指定して削除"></a>
+
+###### 列番号を指定して削除
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': [3, 4, 5, 6, 7, 8],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    },
+    index=pd.Index(['r{}'.format(x+1) for x in range(6)], name = 'index')
+)
+
+# df.drop(df.columns[[1, 2]], axis=1)
+df = df.drop(columns=df.columns[[1, 2]])
+df
+```
+
+>              date
+>
+> index
+>
+> r1 2020/05/01
+>
+> r2 2020/05/01
+>
+> r3 2020/05/01
+>
+> r4 2020/05/02
+>
+> r5 2020/05/03
+>
+> r6 2020/05/04
+
+<a id="markdown-行も列もまとめて削除行名・列名／行番号・列番号-1" name="行も列もまとめて削除行名・列名／行番号・列番号-1"></a>
+
+###### 行も列もまとめて削除（行名・列名／行番号・列番号）
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+    'date': ['2020/05/01', '2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+    'item': [3, 4, 5, 6, 7, 8],
+    'price': [12345, 12345, 23456, 3456, 456, 56]
+    },
+    index=pd.Index(['r{}'.format(x+1) for x in range(6)], name = 'index')
+)
+
+df.drop(
+    index=['r1', 'r2', 'r3'],
+    columns=['item']
+)
+
+df.drop(
+    index=df.index[[0, 1, 2]],
+    columns=df.columns[[1]]
+)
+```
+
+>              date  price
+>
+> index
+>
+> r4 2020/05/02 3456
+>
+> r5 2020/05/03 456
+>
+> r6 2020/05/04 56
 
 <a id="markdown-インデックスから行と列を絞るdataframe" name="インデックスから行と列を絞るdataframe"></a>
 
@@ -2305,6 +2868,9 @@ df[:1]  # r1
 df[2:3] # r3
 df[4:6] # r5, r6
 df[7:]  # r8からr20
+
+# 行インデックス
+df[df.index == 'r1']
 ```
 
 ```
@@ -2412,6 +2978,12 @@ r17     160  161  162  163  164  165  166  167  168  169
 r18     170  171  172  173  174  175  176  177  178  179
 r19     180  181  182  183  184  185  186  187  188  189
 r20     190  191  192  193  194  195  196  197  198  199
+
+# 行インデックス
+# df[df.index == 'r1']
+column  c1  c2  c3  c4  c5  c6  c7  c8  c9  c10
+index
+r1       0   1   2   3   4   5   6   7   8    9
 ```
 
 <a id="markdown-行と列" name="行と列"></a>
@@ -2611,30 +3183,85 @@ df = pd.DataFrame({
 
 df[[True, True, True, False, True]]
 
+# 要素の値が条件に合致する行を抽出（演算子は and, or, not ではなく &, |, ~ を使い、複数条件の場合は各々括弧で囲む）
+df[df['price'] != 12345] # NOT # 条件に適合する行を削除する場合には、これを元のDataFrameに代入して使用（ df = df[df['price'] != 12345] ）
 df[df['price'] < 456]
 df[(df['price'] <= 456) | (df['item'] == 'bar')] # OR
 df[~(df['item'] == 'piyo') & (df['item'] == 'piyo')] # NOT, AND
+
+# 条件に合致する行のインデックスを取得して、その行を削除する　⇒条件に適合しない行を抽出する
+idx = df[df['price'] == 56].index
+df.drop(idx)
 ```
 
 ```
+# df[[True, True, True, False, True]]
          date  item  price
 0  2020/05/01   foo  12345
 1  2020/05/01   bar  23456
 2  2020/05/02  hoge   3456
 4  2020/05/04  fuga     56
 
+# df[df['price'] != 12345] # NOT
+         date  item  price
+1  2020/05/01   bar  23456
+2  2020/05/02  hoge   3456
+3  2020/05/03  piyo    456
+4  2020/05/04  fuga     56
+
+# df[df['price'] < 456]
          date  item  price
 4  2020/05/04  fuga     56
 
+# df[(df['price'] <= 456) | (df['item'] == 'bar')] # OR
          date  item  price
 1  2020/05/01   bar  23456
 3  2020/05/03  piyo    456
 4  2020/05/04  fuga     56
 
+df[~(df['item'] == 'piyo') & (df['item'] == 'piyo')] # NOT, AND
 Empty DataFrame
 Columns: [date, item, price]
 Index: []
+
+# 条件に合致する行のインデックスを取得して、その行を削除する　⇒条件に適合しない行を抽出する
+         date  item  price
+0  2020/05/01   foo  12345
+1  2020/05/01   bar  23456
+2  2020/05/02  hoge   3456
+3  2020/05/03  piyo    456
 ```
+
+複数条件の指定を間違えると以下のエラーが出力される
+
+```py
+# $でなくandを指定している
+df[df['item'] == 'fuga' and df['price'] < 456]
+
+df[(df['item'] == 'fuga') and (df['price'] < 456)]
+```
+
+> ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+
+```py
+# 括弧がない
+df[df['item'] == 'fuga' & df['price'] < 456]
+```
+
+> TypeError: ufunc 'bitwise_and' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+>
+> ValueError: Buffer dtype mismatch, expected 'Python object' but got 'long long'
+>
+> TypeError: Cannot perform 'rand\_' with a dtyped [int64] array and scalar of type [bool]
+
+```py
+# 正しい指定方法
+df[(df['item'] == 'fuga') & (df['price'] < 456)]
+```
+
+>          date  item  price
+>
+> 4 2020/05/04 fuga 56
 
 <a id="markdown-query-メソッド" name="query-メソッド"></a>
 
@@ -2753,6 +3380,54 @@ df.query('price.astype("str").str.endswith("6")') # 文字型以外の列
 3  piyo    456    76
 4  fuga     56    87
 ```
+
+<a id="markdown-行インデックスを条件に指定する" name="行インデックスを条件に指定する"></a>
+
+##### 行インデックスを条件に指定する
+
+```py
+import pandas as pd
+
+df = pd.DataFrame({
+   'date': ['2020/05/01', '2020/05/01', '2020/05/02', '2020/05/03', '2020/05/04'],
+   'item': ['foo', 'bar', 'hoge', 'piyo', 'fuga'],
+   'price': [12345, 23456, 3456, 456, 56]
+   },
+   index=pd.Index(['r{}'.format(x+1) for x in range(5)], name = 'index')
+)
+
+df
+df.index
+
+print(df.index.str.contains('1'))
+df[df.index.str.contains('1')]
+```
+
+> \# df
+>
+>          date  item  price
+>
+> r1 2020/05/01 foo 12345
+>
+> r2 2020/05/01 bar 23456
+>
+> r3 2020/05/02 hoge 3456
+>
+> r4 2020/05/03 piyo 456
+>
+> r5 2020/05/04 fuga 56
+>
+> \# df.index
+>
+> Index(['r1', 'r2', 'r3', 'r4', 'r5'], dtype='object', name='index')
+
+> [ True False False False False]
+
+>              date item  price
+>
+> index
+>
+> r1 2020/05/01 foo 12345
 
 <a id="markdown-条件に適合する列を抽出" name="条件に適合する列を抽出"></a>
 
@@ -5216,6 +5891,257 @@ index
 <a id="markdown-matplotlib-1" name="matplotlib-1"></a>
 
 # Matplotlib
+
+<a id="markdown-pycaret-1" name="pycaret-1"></a>
+
+## PyCaret
+
+<a id="markdown-データ読み込み" name="データ読み込み"></a>
+
+## データ読み込み
+
+<a id="markdown-pandas-1" name="pandas-1"></a>
+
+### pandas
+
+```py
+import pandas as pd
+data = pd.read_csv('c:/path_to_data/file.csv')
+```
+
+<a id="markdown-サンプルデータ" name="サンプルデータ"></a>
+
+### サンプルデータ
+
+```py
+from pycaret.datasets import get_data
+data = get_data('juice')
+```
+
+<a id="markdown-リポジトリ" name="リポジトリ"></a>
+
+#### リポジトリ
+
+| Dataset                                                                                                              | Data Types   | Default Task                | Target Variable             | # Instances | # Attributes |
+| -------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------- | --------------------------- | ----------- | ------------ |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/anomaly.csv" >anomaly</a>                 | Multivariate | Anomaly Detection           | None                        | 1000        | 10           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/france.csv" >france</a>                   | Multivariate | Association Rule Mining     | InvoiceNo, Description      | 8557        | 8            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/germany.csv" >germany</a>                 | Multivariate | Association Rule Mining     | InvoiceNo, Description      | 9495        | 8            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/bank.csv" >bank</a>                       | Multivariate | Classification (Binary)     | deposit                     | 45211       | 17           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/blood.csv" >blood</a>                     | Multivariate | Classification (Binary)     | Class                       | 748         | 5            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/cancer.csv" >cancer</a>                   | Multivariate | Classification (Binary)     | Class                       | 683         | 10           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/credit.csv" >credit</a>                   | Multivariate | Classification (Binary)     | default                     | 24000       | 24           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/diabetes.csv" >diabetes</a>               | Multivariate | Classification (Binary)     | Class variable              | 768         | 9            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/electrical_grid.csv" >electrical_grid</a> | Multivariate | Classification (Binary)     | stabf                       | 10000       | 14           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/employee.csv" >employee</a>               | Multivariate | Classification (Binary)     | left                        | 14999       | 10           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/heart.csv" >heart</a>                     | Multivariate | Classification (Binary)     | DEATH                       | 200         | 16           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/heart_disease.csv" >heart_disease</a>     | Multivariate | Classification (Binary)     | Disease                     | 270         | 14           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/hepatitis.csv" >hepatitis</a>             | Multivariate | Classification (Binary)     | Class                       | 154         | 32           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/income.csv" >income</a>                   | Multivariate | Classification (Binary)     | income >50K                 | 32561       | 14           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/juice.csv" >juice</a>                     | Multivariate | Classification (Binary)     | Purchase                    | 1070        | 15           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/nba.csv" >nba</a>                         | Multivariate | Classification (Binary)     | TARGET_5Yrs                 | 1340        | 21           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/wine.csv" >wine</a>                       | Multivariate | Classification (Binary)     | type                        | 6498        | 13           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/telescope.csv" >telescope</a>             | Multivariate | Classification (Binary)     | Class                       | 19020       | 11           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/glass.csv" >glass</a>                     | Multivariate | Classification (Multiclass) | Type                        | 214         | 10           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/iris.csv" >iris</a>                       | Multivariate | Classification (Multiclass) | species                     | 150         | 5            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/poker.csv" >poker</a>                     | Multivariate | Classification (Multiclass) | CLASS                       | 100000      | 11           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/questions.csv" >questions</a>             | Multivariate | Classification (Multiclass) | Next_Question               | 499         | 4            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/satellite.csv" >satellite</a>             | Multivariate | Classification (Multiclass) | Class                       | 6435        | 37           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/asia_gdp.csv" >asia_gdp</a>               | Multivariate | Clustering                  | None                        | 40          | 11           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/elections.csv" >elections</a>             | Multivariate | Clustering                  | None                        | 3195        | 54           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/facebook.csv" >facebook</a>               | Multivariate | Clustering                  | None                        | 7050        | 12           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/ipl.csv" >ipl</a>                         | Multivariate | Clustering                  | None                        | 153         | 25           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/jewellery.csv" >jewellery</a>             | Multivariate | Clustering                  | None                        | 505         | 4            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/mice.csv" >mice</a>                       | Multivariate | Clustering                  | None                        | 1080        | 82           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/migration.csv" >migration</a>             | Multivariate | Clustering                  | None                        | 233         | 12           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/perfume.csv" >perfume</a>                 | Multivariate | Clustering                  | None                        | 20          | 29           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/pokemon.csv" >pokemon</a>                 | Multivariate | Clustering                  | None                        | 800         | 13           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/population.csv" >population</a>           | Multivariate | Clustering                  | None                        | 255         | 56           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/public_health.csv" >public_health</a>     | Multivariate | Clustering                  | None                        | 224         | 21           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/seeds.csv" >seeds</a>                     | Multivariate | Clustering                  | None                        | 210         | 7            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/wholesale.csv" >wholesale</a>             | Multivariate | Clustering                  | None                        | 440         | 8            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/tweets.csv" >tweets</a>                   | Text         | NLP                         | tweet                       | 8594        | 2            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/amazon.csv" >amazon</a>                   | Text         | NLP / Classification        | reviewText                  | 20000       | 2            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/kiva.csv" >kiva</a>                       | Text         | NLP / Classification        | en                          | 6818        | 7            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/spx.csv" >spx</a>                         | Text         | NLP / Regression            | text                        | 874         | 4            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/wikipedia.csv" >wikipedia</a>             | Text         | NLP / Classification        | Text                        | 500         | 3            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/automobile.csv" >automobile</a>           | Multivariate | Regression                  | price                       | 202         | 26           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/bike.csv" >bike</a>                       | Multivariate | Regression                  | cnt                         | 17379       | 15           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/boston.csv" >boston</a>                   | Multivariate | Regression                  | medv                        | 506         | 14           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/concrete.csv" >concrete</a>               | Multivariate | Regression                  | strength                    | 1030        | 9            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/diamond.csv" >diamond</a>                 | Multivariate | Regression                  | Price                       | 6000        | 8            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/energy.csv" >energy</a>                   | Multivariate | Regression                  | Heating Load / Cooling Load | 768         | 10           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/forest.csv" >forest</a>                   | Multivariate | Regression                  | area                        | 517         | 13           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/gold.csv" >gold</a>                       | Multivariate | Regression                  | Gold_T+22                   | 2558        | 121          |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/house.csv" >house</a>                     | Multivariate | Regression                  | SalePrice                   | 1461        | 81           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/insurance.csv" >insurance</a>             | Multivariate | Regression                  | charges                     | 1338        | 7            |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/parkinsons.csv" >parkinsons</a>           | Multivariate | Regression                  | PPE                         | 5875        | 22           |
+| <a href="https://raw.githubusercontent.com/pycaret/pycaret/master/datasets/traffic.csv" >traffic</a>                 | Multivariate | Regression                  | traffic_volume              | 48204       | 8            |
+
+<a id="markdown-分析手法の選択" name="分析手法の選択"></a>
+
+## 分析手法の選択
+
+```py
+from pycaret.datasets import get_data
+data = get_data('boston')
+```
+
+実行したいタスクに応じて以下のモジュールのうちどれか 1 つをインポートする。
+
+| モジュール                  | import 文                             |
+| --------------------------- | ------------------------------------- |
+| Classification              | from pycaret.classification import \* |
+| Regression                  | from pycaret.regression import \*     |
+| Clustering                  | from pycaret.clustering import \*     |
+| Anomaly Detection           | from pycaret.anomaly import \*        |
+| Natural Language Processing | from pycaret.nlp import \*            |
+| Association Rule Mining     | from pycaret.arules import \*         |
+
+```py
+# 続き
+from pycaret.regression import *
+exp1 = setup(data, target = 'medv')
+```
+
+- data
+
+|     | crim    | zn   | indus | chas | nox   | rm    | age  | dis    | rad | tax | ptratio | black  | lstat | medv |
+| --- | ------- | ---- | ----- | ---- | ----- | ----- | ---- | ------ | --- | --- | ------- | ------ | ----- | ---- |
+| 0   | 0.00632 | 18.0 | 2.31  | 0    | 0.538 | 6.575 | 65.2 | 4.0900 | 1   | 296 | 15.3    | 396.90 | 4.98  | 24.0 |
+| 1   | 0.02731 | 0.0  | 7.07  | 0    | 0.469 | 6.421 | 78.9 | 4.9671 | 2   | 242 | 17.8    | 396.90 | 9.14  | 21.6 |
+| 2   | 0.02729 | 0.0  | 7.07  | 0    | 0.469 | 7.185 | 61.1 | 4.9671 | 2   | 242 | 17.8    | 392.83 | 4.03  | 34.7 |
+| 3   | 0.03237 | 0.0  | 2.18  | 0    | 0.458 | 6.998 | 45.8 | 6.0622 | 3   | 222 | 18.7    | 394.63 | 2.94  | 33.4 |
+| 4   | 0.06905 | 0.0  | 2.18  | 0    | 0.458 | 7.147 | 54.2 | 6.0622 | 3   | 222 | 18.7    | 396.90 | 5.33  | 36.2 |
+
+- exp1
+
+```
+Initiated	. . . . . . . . . . . . . . . . . .	03:39:14
+Status	. . . . . . . . . . . . . . . . . .	Preparing Data for Modeling
+ETC	. . . . . . . . . . . . . . . . . .	Calculating ETC
+
+Following data types have been inferred automatically, if they are correct press enter to continue or type 'quit' otherwise.
+```
+
+|         | Data Type   |
+| ------- | ----------- |
+| crim    | Numeric     |
+| zn      | Numeric     |
+| indus   | Numeric     |
+| chas    | Categorical |
+| nox     | Numeric     |
+| rm      | Numeric     |
+| age     | Numeric     |
+| dis     | Numeric     |
+| rad     | Categorical |
+| tax     | Numeric     |
+| ptratio | Numeric     |
+| black   | Numeric     |
+| lstat   | Numeric     |
+| medv    | Label       |
+
+[Attribute Information](https://scikit-learn.org/stable/datasets/index.html#boston-house-prices-dataset)と見比べて、データ型が適切か判断し、問題なければ `Enter` キーを押す。
+
+- CRIM per capita crime rate by town
+- ZN proportion of residential land zoned for lots over 25,000 sq.ft.
+- INDUS proportion of non-retail business acres per town
+- CHAS Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)
+- NOX nitric oxides concentration (parts per 10 million)
+- RM average number of rooms per dwelling
+- AGE proportion of owner-occupied units built prior to 1940
+- DIS weighted distances to five Boston employment centres
+- RAD index of accessibility to radial highways
+- TAX full-value property-tax rate per \$10,000
+- PTRATIO pupil-teacher ratio by town
+- B 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
+- LSTAT % lower status of the population
+- MEDV Median value of owner-occupied homes in \$1000’s
+
+```
+Setup Succesfully Completed!
+```
+
+|     | Description                  | Value     |
+| --- | ---------------------------- | --------- |
+| 0   | session_id                   | 3595      |
+| 1   | Transform Target             | False     |
+| 2   | Transform Target Method      | None      |
+| 3   | Original Data                | (506, 14) |
+| 4   | Missing Values               | False     |
+| 5   | Numeric Features             | 11        |
+| 6   | Categorical Features         | 2         |
+| 7   | Ordinal Features             | False     |
+| 8   | High Cardinality Features    | False     |
+| 9   | High Cardinality Method      | None      |
+| 10  | Sampled Data                 | (506, 14) |
+| 11  | Transformed Train Set        | (354, 21) |
+| 12  | Transformed Test Set         | (152, 21) |
+| 13  | Numeric Imputer              | mean      |
+| 14  | Categorical Imputer          | constant  |
+| 15  | Normalize                    | False     |
+| 16  | Normalize Method             | None      |
+| 17  | Transformation               | False     |
+| 18  | Transformation Method        | None      |
+| 19  | PCA                          | False     |
+| 20  | PCA Method                   | None      |
+| 21  | PCA Components               | None      |
+| 22  | Ignore Low Variance          | False     |
+| 23  | Combine Rare Levels          | False     |
+| 24  | Rare Level Threshold         | None      |
+| 25  | Numeric Binning              | False     |
+| 26  | Remove Outliers              | False     |
+| 27  | Outliers Threshold           | None      |
+| 28  | Remove Multicollinearity     | False     |
+| 29  | Multicollinearity Threshold  | None      |
+| 30  | Clustering                   | False     |
+| 31  | Clustering Iteration         | None      |
+| 32  | Polynomial Features          | False     |
+| 33  | Polynomial Degree            | None      |
+| 34  | Trignometry Features         | False     |
+| 35  | Polynomial Threshold         | None      |
+| 36  | Group Features               | False     |
+| 37  | Feature Selection            | False     |
+| 38  | Features Selection Threshold | None      |
+| 39  | Feature Interaction          | False     |
+| 40  | Feature Ratio                | False     |
+| 41  | Interaction Threshold        | None      |
+
+<a id="markdown-モデルと評価指標の比較" name="モデルと評価指標の比較"></a>
+
+### モデルと評価指標の比較
+
+```py
+# 続き
+compare_models()
+```
+
+- compare_models
+
+|     | Model                           | MAE       | MSE        | RMSE      | R2        | RMSLE    | MAPE     |
+| --- | ------------------------------- | --------- | ---------- | --------- | --------- | -------- | -------- |
+| 0   | CatBoost Regressor              | 2.137200  | 8.959200   | 2.960800  | 0.886200  | 0.138000 | 0.107200 |
+| 1   | Extra Trees Regressor           | 2.161500  | 9.273000   | 2.991600  | 0.885100  | 0.137500 | 0.107900 |
+| 2   | Gradient Boosting Regressor     | 2.142200  | 8.784900   | 2.924300  | 0.884600  | 0.138800 | 0.108300 |
+| 3   | Extreme Gradient Boosting       | 2.225900  | 9.871600   | 3.096700  | 0.872500  | 0.145400 | 0.112700 |
+| 4   | Random Forest                   | 2.321600  | 11.294700  | 3.290600  | 0.857200  | 0.150300 | 0.117600 |
+| 5   | Light Gradient Boosting Machine | 2.327300  | 12.133200  | 3.394000  | 0.846500  | 0.153600 | 0.116900 |
+| 6   | AdaBoost Regressor              | 2.851700  | 13.251900  | 3.613700  | 0.828000  | 0.177800 | 0.150300 |
+| 7   | Linear Regression               | 3.271800  | 22.078800  | 4.615900  | 0.732500  | 0.267900 | 0.161800 |
+| 8   | Ridge Regression                | 3.254800  | 22.115200  | 4.615400  | 0.731800  | 0.260100 | 0.161400 |
+| 9   | Bayesian Ridge                  | 3.281200  | 22.589300  | 4.666200  | 0.724900  | 0.256000 | 0.162100 |
+| 10  | Least Angle Regression          | 3.353700  | 22.841200  | 4.705400  | 0.722300  | 0.272500 | 0.166300 |
+| 11  | Random Sample Consensus         | 3.139500  | 23.712300  | 4.714800  | 0.715700  | 0.261400 | 0.157700 |
+| 12  | Huber Regressor                 | 3.500500  | 27.390300  | 5.074600  | 0.675800  | 0.263200 | 0.171900 |
+| 13  | TheilSen Regressor              | 3.369800  | 26.990800  | 5.024000  | 0.673300  | 0.297500 | 0.159900 |
+| 14  | Lasso Regression                | 3.726500  | 27.823200  | 5.216000  | 0.655900  | 0.267700 | 0.175700 |
+| 15  | Elastic Net                     | 3.732100  | 27.814000  | 5.216100  | 0.655200  | 0.266500 | 0.175600 |
+| 16  | Decision Tree                   | 3.395800  | 27.676900  | 5.072700  | 0.649500  | 0.225400 | 0.165700 |
+| 17  | Orthogonal Matching Pursuit     | 4.200700  | 36.326400  | 5.883500  | 0.563100  | 0.314300 | 0.214700 |
+| 18  | K Neighbors Regressor           | 4.468900  | 40.267300  | 6.279400  | 0.495000  | 0.242200 | 0.205600 |
+| 19  | Support Vector Machine          | 5.342500  | 66.634500  | 8.066800  | 0.193300  | 0.306100 | 0.233600 |
+| 20  | Lasso Least Angle Regression    | 6.667200  | 82.832100  | 9.047900  | -0.018100 | 0.382000 | 0.353600 |
+| 21  | Passive Aggressive Regressor    | 12.638000 | 251.056000 | 14.864600 | -2.297600 | 0.588000 | 0.667900 |
 
 <hr>
 
